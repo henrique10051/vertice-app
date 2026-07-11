@@ -5,7 +5,6 @@ import { FinancialGrowthChart } from '@/components/dashboard/FinancialGrowthChar
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import useGoalsStore from '@/stores/useGoalsStore'
-import { getTodayStr } from '@/lib/date-utils'
 import { CheckCircle2, Circle, Flame, Target, Wallet, TrendingUp, Activity } from 'lucide-react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
@@ -17,13 +16,12 @@ const quotes = [
 ]
 
 export default function Index() {
-  const today = getTodayStr()
   const { habits, toggleHabit } = useHabitsStore()
   const { transactions } = useFinancesStore()
   const { goals } = useGoalsStore()
 
-  const pendingHabits = habits.filter((h) => !h.history.includes(today)).slice(0, 3)
-  const completedToday = habits.filter((h) => h.history.includes(today)).length
+  const pendingHabits = habits.filter((h) => !h.is_completed).slice(0, 3)
+  const completedToday = habits.filter((h) => h.is_completed).length
   const habitRate = habits.length > 0 ? Math.round((completedToday / habits.length) * 100) : 0
 
   const monthlyIncome = transactions
@@ -145,9 +143,9 @@ export default function Index() {
                 <div
                   key={h.id}
                   className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                  onClick={() => toggleHabit(h.id, today)}
+                  onClick={() => toggleHabit(h.id)}
                 >
-                  <span className="font-medium text-sm">{h.name}</span>
+                  <span className="font-medium text-sm">{h.title}</span>
                   <Circle
                     size={20}
                     className="text-muted-foreground hover:text-primary transition-colors"

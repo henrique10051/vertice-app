@@ -15,7 +15,6 @@ export default function Layout() {
       <div
         className={cn(
           'flex-1 flex flex-col transition-all duration-300 ease-in-out min-h-screen',
-          'md:ml-20 lg:ml-64', // Fallback for specific breakpoints if needed
           sidebarCollapsed ? 'md:ml-20' : 'md:ml-64',
         )}
       >
@@ -25,6 +24,7 @@ export default function Layout() {
         </main>
       </div>
       <BottomNav />
+      <AIMentorChat />
     </div>
   )
 }

@@ -4,10 +4,11 @@ import {
   ListChecks,
   Target,
   Wallet,
-  Settings,
+  User,
   Bot,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useMainStore from '@/stores/main'
@@ -18,6 +19,7 @@ const navItems = [
   { path: '/objetivos', label: 'Objetivos', icon: Target },
   { path: '/financas', label: 'Finanças', icon: Wallet },
   { path: '/mentor', label: 'Mentor IA', icon: Bot },
+  { path: '/perfil', label: 'Perfil', icon: User },
 ]
 
 export function Sidebar() {
@@ -33,8 +35,16 @@ export function Sidebar() {
     >
       <div className="flex items-center justify-between p-6 h-20">
         {!sidebarCollapsed && (
-          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-            Crescimento Ativo
+          <span className="text-lg font-bold flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+              <Sparkles size={18} />
+            </span>
+            Lumi
+          </span>
+        )}
+        {sidebarCollapsed && (
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+            <Sparkles size={18} />
           </span>
         )}
         <button
@@ -72,16 +82,6 @@ export function Sidebar() {
           )
         })}
       </nav>
-
-      <div className="p-4 mb-4">
-        <Link
-          to="#"
-          className="flex items-center gap-4 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 transition-colors"
-        >
-          <Settings size={22} />
-          {!sidebarCollapsed && <span className="font-medium">Configurações</span>}
-        </Link>
-      </div>
     </aside>
   )
 }

@@ -19,12 +19,12 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
   const { toast } = useToast()
   const [name, setName] = useState('')
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily')
-  const [goal, setGoal] = useState('')
+  const [description, setDescription] = useState('')
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name) return
-    addHabit(name, 'star', frequency, Number(goal) || 1)
+    await addHabit(name, frequency, description)
     toast({ title: 'Hábito criado!', description: `${name} foi adicionado.` })
     onSuccess()
   }
@@ -40,30 +40,26 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
           required
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Frequência</Label>
-          <Select value={frequency} onValueChange={(v: any) => setFrequency(v)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Diária</SelectItem>
-              <SelectItem value="weekly">Semanal</SelectItem>
-              <SelectItem value="monthly">Mensal</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Meta</Label>
-          <Input
-            type="number"
-            min="1"
-            placeholder="Ex: 30"
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-          />
-        </div>
+      <div className="space-y-2">
+        <Label>Descrição</Label>
+        <Input
+          placeholder="Ex: Meditação guiada ao acordar"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Frequência</Label>
+        <Select value={frequency} onValueChange={(v: any) => setFrequency(v)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="daily">Diária</SelectItem>
+            <SelectItem value="weekly">Semanal</SelectItem>
+            <SelectItem value="monthly">Mensal</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <Button type="submit" className="w-full">
         Salvar Hábito
@@ -80,10 +76,10 @@ export function FinanceForm({ onSuccess }: { onSuccess: () => void }) {
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [cat, setCat] = useState<any>('Alimentação')
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!desc || !amount) return
-    addTransaction({
+    await addTransaction({
       description: desc,
       amount: Number(amount),
       type,

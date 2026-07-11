@@ -4,7 +4,6 @@ import useFinancesStore from '@/stores/useFinancesStore'
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
-import { MemoryOnlyNotice } from '@/components/MemoryOnlyNotice'
 import { TransactionsPanel } from '@/components/TransactionsPanel'
 import { FinanceAddDialog } from '@/components/FinanceAddDialog'
 
@@ -41,8 +40,6 @@ export default function Finances() {
         <h1 className="text-3xl font-bold tracking-tight mb-2">Organização Financeira</h1>
         <p className="text-muted-foreground">Acompanhe seus gastos e invista no seu crescimento.</p>
       </div>
-
-      <MemoryOnlyNotice />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="glass-card rounded-3xl border-none shadow-soft bg-gradient-to-br from-primary/10 to-transparent">

@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ListChecks, Target, Wallet } from 'lucide-react'
+import { LayoutDashboard, ListChecks, Wallet, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { path: '/', label: 'Início', icon: LayoutDashboard },
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
-  { path: '/objetivos', label: 'Objetivos', icon: Target },
   { path: '/financas', label: 'Finanças', icon: Wallet },
+  { path: '/perfil', label: 'Perfil', icon: User },
 ]
 
 export function BottomNav() {

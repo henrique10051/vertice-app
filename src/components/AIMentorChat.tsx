@@ -4,7 +4,8 @@ import { Bot, Send, X, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import { getAIMentorResponse, suggestedTopics, type AIMentorContext } from '@/lib/ai-mentor'
+import { suggestedTopics, type AIMentorContext } from '@/lib/ai-mentor'
+import { fetchAIMentorInsight } from '@/services/ai-mentor'
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import useGoalsStore from '@/stores/useGoalsStore'
@@ -18,6 +19,7 @@ export function AIMentorChat() {
     { role: 'ai', content: 'Olá! Sou seu Mentor IA. Como posso ajudar no seu crescimento hoje?' },
   ])
   const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const { habits } = useHabitsStore()
@@ -30,15 +32,15 @@ export function AIMentorChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return
     const newMessages = [...messages, { role: 'user' as const, content: text }]
     setMessages(newMessages)
     setInput('')
-    setTimeout(() => {
-      const response = getAIMentorResponse(text, context)
-      setMessages([...newMessages, { role: 'ai', content: response }])
-    }, 600)
+    setIsLoading(true)
+    const response = await fetchAIMentorInsight(text, context)
+    setMessages([...newMessages, { role: 'ai', content: response }])
+    setIsLoading(false)
   }
 
   if (location.pathname === '/mentor') return null
@@ -97,6 +99,13 @@ export function AIMentorChat() {
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-muted p-3 rounded-2xl rounded-bl-sm">
+              <Sparkles size={16} className="animate-pulse text-primary" />
+            </div>
+          </div>
+        )}
       </div>
 
       {messages.length <= 1 && (
@@ -121,7 +130,12 @@ export function AIMentorChat() {
           placeholder="Pergunte algo..."
           className="rounded-full"
         />
-        <Button size="icon" className="rounded-full shrink-0" onClick={() => sendMessage(input)}>
+        <Button
+          size="icon"
+          className="rounded-full shrink-0"
+          onClick={() => sendMessage(input)}
+          disabled={isLoading}
+        >
           <Send size={18} />
         </Button>
       </div>

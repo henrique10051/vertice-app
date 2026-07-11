@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { MemoryOnlyNotice } from '@/components/MemoryOnlyNotice'
-import { getAIMentorResponse, suggestedTopics, type AIMentorContext } from '@/lib/ai-mentor'
+import { suggestedTopics, type AIMentorContext } from '@/lib/ai-mentor'
+import { fetchAIMentorInsight } from '@/services/ai-mentor'
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import useGoalsStore from '@/stores/useGoalsStore'
@@ -21,6 +21,7 @@ export default function Mentor() {
     },
   ])
   const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const { habits } = useHabitsStore()
@@ -33,15 +34,15 @@ export default function Mentor() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return
     const newMessages = [...messages, { role: 'user' as const, content: text }]
     setMessages(newMessages)
     setInput('')
-    setTimeout(() => {
-      const response = getAIMentorResponse(text, context)
-      setMessages([...newMessages, { role: 'ai', content: response }])
-    }, 600)
+    setIsLoading(true)
+    const response = await fetchAIMentorInsight(text, context)
+    setMessages([...newMessages, { role: 'ai', content: response }])
+    setIsLoading(false)
   }
 
   return (
@@ -57,8 +58,6 @@ export default function Mentor() {
           Receba conselhos personalizados para seu crescimento.
         </p>
       </div>
-
-      <MemoryOnlyNotice />
 
       <div className="flex flex-wrap gap-2">
         {suggestedTopics.map((topic) => (
@@ -102,6 +101,16 @@ export default function Mentor() {
               )}
             </div>
           ))}
+          {isLoading && (
+            <div className="flex gap-3 justify-start">
+              <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0">
+                <Bot size={18} className="text-primary-foreground" />
+              </div>
+              <div className="bg-muted p-4 rounded-2xl rounded-bl-sm">
+                <Sparkles size={16} className="animate-pulse text-primary" />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-t flex gap-2">
@@ -112,7 +121,12 @@ export default function Mentor() {
             placeholder="Digite sua pergunta..."
             className="rounded-full"
           />
-          <Button size="icon" className="rounded-full shrink-0" onClick={() => sendMessage(input)}>
+          <Button
+            size="icon"
+            className="rounded-full shrink-0"
+            onClick={() => sendMessage(input)}
+            disabled={isLoading}
+          >
             <Send size={18} />
           </Button>
         </div>

@@ -1,17 +1,13 @@
-export interface AIMentorContext {
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import { corsHeaders } from '../_shared/cors.ts'
+
+interface AIMentorContext {
   habits: { title: string; is_completed: boolean; frequency: string }[]
   transactions: { amount: number; type: 'income' | 'expense'; category: string }[]
   goals: { title: string; status: string; subtasks: { completed: boolean }[] }[]
 }
 
-export const suggestedTopics = [
-  'Como posso poupar mais?',
-  'Como melhorar minha rotina matinal?',
-  'Quais hábitos devo priorizar?',
-  'Como atingir meus objetivos mais rápido?',
-]
-
-export function getAIMentorResponse(message: string, context: AIMentorContext): string {
+function generateInsight(message: string, context: AIMentorContext): string {
   const msg = message.toLowerCase()
 
   const totalHabits = context.habits.length
@@ -54,3 +50,22 @@ export function getAIMentorResponse(message: string, context: AIMentorContext): 
 
   return `Olá! Sou seu mentor de crescimento. Posso ajudar com:\n\n• Estratégias financeiras e poupança\n• Melhoria de hábitos e rotinas\n• Acompanhamento de objetivos\n\nVocê tem ${totalHabits} hábitos, ${activeGoals} objetivos ativos e taxa de poupança de ${savingsRate}%. Pergunte qualquer coisa!`
 }
+
+Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const { message, context } = (await req.json()) as { message: string; context: AIMentorContext }
+    const response = generateInsight(message, context)
+    return new Response(JSON.stringify({ response }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    })
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid request' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    })
+  }
+})

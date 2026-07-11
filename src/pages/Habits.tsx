@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import useHabitsStore from '@/stores/useHabitsStore'
 import { getTodayStr, getLastNDays } from '@/lib/date-utils'
-import { CheckCircle2, Circle, Flame, Calendar, Target } from 'lucide-react'
+import { CheckCircle2, Circle, Calendar, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AddCard } from '@/components/AddCard'
-import { MemoryOnlyNotice } from '@/components/MemoryOnlyNotice'
 import { HabitAddDialog } from '@/components/HabitAddDialog'
 
 const freqLabel: Record<string, string> = {
@@ -15,7 +14,7 @@ const freqLabel: Record<string, string> = {
 }
 
 export default function Habits() {
-  const { habits, toggleHabit } = useHabitsStore()
+  const { habits, toggleHabit, deleteHabit } = useHabitsStore()
   const days = getLastNDays(7)
   const today = getTodayStr()
   const [addOpen, setAddOpen] = useState(false)
@@ -28,8 +27,6 @@ export default function Habits() {
           Mantenha a consistência para alcançar seus objetivos.
         </p>
       </div>
-
-      <MemoryOnlyNotice />
 
       <div className="overflow-x-auto pb-4 hide-scrollbar">
         <div className="flex gap-4 min-w-max">
@@ -59,7 +56,7 @@ export default function Habits() {
 
       <div className="grid gap-4">
         {habits.map((habit) => {
-          const isDoneToday = habit.history.includes(today)
+          const isDoneToday = habit.is_completed
           return (
             <Card
               key={habit.id}
@@ -68,28 +65,29 @@ export default function Habits() {
               <CardContent className="p-0 flex items-center justify-between">
                 <div className="p-6 flex-1 flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl">
-                    🌟
+                    {isDoneToday ? '✅' : '🌟'}
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg">{habit.name}</h3>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg">{habit.title}</h3>
+                    {habit.description && (
+                      <p className="text-sm text-muted-foreground mt-0.5">{habit.description}</p>
+                    )}
                     <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground font-medium flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <Flame size={16} className={habit.streak > 0 ? 'text-orange-500' : ''} />
-                        {habit.streak} {habit.streak === 1 ? 'dia' : 'dias'}
-                      </span>
                       <span className="flex items-center gap-1">
                         <Calendar size={14} />
                         {freqLabel[habit.frequency] || 'Diária'}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Target size={14} />
-                        Meta: {habit.goal}
-                      </span>
                     </div>
                   </div>
+                  <button
+                    onClick={() => deleteHabit(habit.id)}
+                    className="p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
                 <button
-                  onClick={() => toggleHabit(habit.id, today)}
+                  onClick={() => toggleHabit(habit.id)}
                   className="px-8 h-full flex items-center justify-center transition-all duration-300 border-l border-border/50 hover:bg-muted/30"
                 >
                   {isDoneToday ? (
