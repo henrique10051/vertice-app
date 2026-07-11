@@ -3,6 +3,7 @@ import { Bell, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { QuickAddModal } from './QuickAddModal'
+import { ThemeToggle } from './ThemeToggle'
 
 export function Header() {
   const [modalOpen, setModalOpen] = useState(false)

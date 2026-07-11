@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { Header } from './Header'
+import { AIMentorChat } from './AIMentorChat'
 import useMainStore from '@/stores/main'
 import { cn } from '@/lib/utils'
 

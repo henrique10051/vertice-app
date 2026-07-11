@@ -5,6 +5,7 @@ import {
   Target,
   Wallet,
   Settings,
+  Bot,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
@@ -16,6 +17,7 @@ const navItems = [
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
   { path: '/objetivos', label: 'Objetivos', icon: Target },
   { path: '/financas', label: 'Finanças', icon: Wallet },
+  { path: '/mentor', label: 'Mentor IA', icon: Bot },
 ]
 
 export function Sidebar() {
