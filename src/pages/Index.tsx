@@ -3,7 +3,7 @@ import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import useGoalsStore from '@/stores/useGoalsStore'
 import { getTodayStr } from '@/lib/date-utils'
-import { CheckCircle2, Circle, Flame, Target } from 'lucide-react'
+import { CheckCircle2, Circle, Flame, Target, Wallet } from 'lucide-react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 
