@@ -6,13 +6,39 @@ export type Habit = {
   name: string
   icon: string
   streak: number
-  history: string[] // Array of YYYY-MM-DD
+  history: string[]
+  frequency: 'daily' | 'weekly' | 'monthly'
+  goal: number
 }
 
 const initialHabits: Habit[] = [
-  { id: '1', name: 'Beber 2L de Água', icon: 'droplets', streak: 12, history: [getTodayStr()] },
-  { id: '2', name: 'Ler 10 páginas', icon: 'book', streak: 5, history: [] },
-  { id: '3', name: 'Exercício (30m)', icon: 'dumbbell', streak: 2, history: [] },
+  {
+    id: '1',
+    name: 'Beber 2L de Água',
+    icon: 'droplets',
+    streak: 12,
+    history: [getTodayStr()],
+    frequency: 'daily',
+    goal: 30,
+  },
+  {
+    id: '2',
+    name: 'Ler 10 páginas',
+    icon: 'book',
+    streak: 5,
+    history: [],
+    frequency: 'daily',
+    goal: 30,
+  },
+  {
+    id: '3',
+    name: 'Exercício (30m)',
+    icon: 'dumbbell',
+    streak: 2,
+    history: [],
+    frequency: 'weekly',
+    goal: 4,
+  },
 ]
 
 const habitsStore = createStore<{ habits: Habit[] }>({ habits: initialHabits })
@@ -37,11 +63,16 @@ export default function useHabitsStore() {
     }))
   }
 
-  const addHabit = (name: string, icon: string) => {
+  const addHabit = (
+    name: string,
+    icon: string,
+    frequency: 'daily' | 'weekly' | 'monthly' = 'daily',
+    goal: number = 1,
+  ) => {
     setState((prev) => ({
       habits: [
         ...prev.habits,
-        { id: Math.random().toString(), name, icon, streak: 0, history: [] },
+        { id: Math.random().toString(), name, icon, streak: 0, history: [], frequency, goal },
       ],
     }))
   }

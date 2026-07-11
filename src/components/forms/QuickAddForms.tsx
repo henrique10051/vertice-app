@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import useHabitsStore from '@/stores/useHabitsStore'
-import useGoalsStore from '@/stores/useGoalsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import { getTodayStr } from '@/lib/date-utils'
 import { useToast } from '@/hooks/use-toast'
@@ -19,11 +18,13 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
   const { addHabit } = useHabitsStore()
   const { toast } = useToast()
   const [name, setName] = useState('')
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily')
+  const [goal, setGoal] = useState('')
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name) return
-    addHabit(name, 'star')
+    addHabit(name, 'star', frequency, Number(goal) || 1)
     toast({ title: 'Hábito criado!', description: `${name} foi adicionado.` })
     onSuccess()
   }
@@ -38,6 +39,31 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
           onChange={(e) => setName(e.target.value)}
           required
         />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Frequência</Label>
+          <Select value={frequency} onValueChange={(v: any) => setFrequency(v)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Diária</SelectItem>
+              <SelectItem value="weekly">Semanal</SelectItem>
+              <SelectItem value="monthly">Mensal</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Meta</Label>
+          <Input
+            type="number"
+            min="1"
+            placeholder="Ex: 30"
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+          />
+        </div>
       </div>
       <Button type="submit" className="w-full">
         Salvar Hábito

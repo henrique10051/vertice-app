@@ -1,13 +1,24 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import useHabitsStore from '@/stores/useHabitsStore'
 import { getTodayStr, getLastNDays } from '@/lib/date-utils'
-import { CheckCircle2, Circle, Flame } from 'lucide-react'
+import { CheckCircle2, Circle, Flame, Calendar, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { AddCard } from '@/components/AddCard'
+import { MemoryOnlyNotice } from '@/components/MemoryOnlyNotice'
+import { HabitAddDialog } from '@/components/HabitAddDialog'
+
+const freqLabel: Record<string, string> = {
+  daily: 'Diária',
+  weekly: 'Semanal',
+  monthly: 'Mensal',
+}
 
 export default function Habits() {
   const { habits, toggleHabit } = useHabitsStore()
   const days = getLastNDays(7)
   const today = getTodayStr()
+  const [addOpen, setAddOpen] = useState(false)
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -18,9 +29,11 @@ export default function Habits() {
         </p>
       </div>
 
+      <MemoryOnlyNotice />
+
       <div className="overflow-x-auto pb-4 hide-scrollbar">
         <div className="flex gap-4 min-w-max">
-          {days.map((date, i) => {
+          {days.map((date) => {
             const isToday = date === today
             const dayName = new Date(date)
               .toLocaleDateString('pt-BR', { weekday: 'short' })
@@ -59,13 +72,22 @@ export default function Habits() {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg">{habit.name}</h3>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground font-medium">
-                      <Flame size={16} className={habit.streak > 0 ? 'text-orange-500' : ''} />
-                      {habit.streak} {habit.streak === 1 ? 'dia' : 'dias'} de sequência
+                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground font-medium flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <Flame size={16} className={habit.streak > 0 ? 'text-orange-500' : ''} />
+                        {habit.streak} {habit.streak === 1 ? 'dia' : 'dias'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={14} />
+                        {freqLabel[habit.frequency] || 'Diária'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Target size={14} />
+                        Meta: {habit.goal}
+                      </span>
                     </div>
                   </div>
                 </div>
-
                 <button
                   onClick={() => toggleHabit(habit.id, today)}
                   className="px-8 h-full flex items-center justify-center transition-all duration-300 border-l border-border/50 hover:bg-muted/30"
@@ -83,7 +105,10 @@ export default function Habits() {
             </Card>
           )
         })}
+        <AddCard onClick={() => setAddOpen(true)} className="min-h-[88px]" />
       </div>
+
+      <HabitAddDialog open={addOpen} setOpen={setAddOpen} />
     </div>
   )
 }
