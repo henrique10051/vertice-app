@@ -1,17 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import {
-  Bot,
-  Send,
-  CheckCircle2,
-  Loader2,
-  BookOpen,
-  Target,
-  Repeat,
-  Rocket,
-  Brain,
-  TrendingUp,
-  Pencil,
-} from 'lucide-react'
+import { Bot, Send, Target, Repeat, Rocket, Brain, TrendingUp, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -27,14 +15,15 @@ import {
   type ProposedHabit,
   type MentorResponse,
 } from '@/services/mentor-chat'
-import { Link } from 'react-router-dom'
+import { MentorMultiTopicInput } from '@/components/MentorMultiTopicInput'
+import { MentorRoadmapPreview } from '@/components/MentorRoadmapPreview'
 
 const TOTAL_QUESTIONS = 5
 
 const INTRO_MESSAGE: ChatMessage = {
   role: 'assistant',
   content:
-    'Olá! Sou seu Mentor de Crescimento Pessoal. Vou conduzir uma breve entrevista para montar um plano personalizado. Quando estiver pronto, clique no botão abaixo para começar!',
+    'Olá! Sou seu Mentor de Crescimento Pessoal. Vou conduzir uma breve entrevista para montar um plano personalizado com técnica Pomodoro. Quando estiver pronto, clique no botão abaixo para começar!',
 }
 
 export default function Mentor() {
@@ -53,13 +42,14 @@ export default function Mentor() {
   const [roadmap, setRoadmap] = useState<{ content: string; habits: ProposedHabit[] } | null>(null)
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState(false)
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (showOtherInput) {
-      inputRef.current?.focus()
-    }
+    if (showOtherInput) inputRef.current?.focus()
   }, [showOtherInput])
+
+  const isMultiTopicQuestion = questionIndex === 1
 
   const processResponse = (resp: MentorResponse, currentMessages: ChatMessage[]) => {
     const updatedMessages: ChatMessage[] = [
@@ -87,7 +77,6 @@ export default function Mentor() {
     setIsLoading(true)
     const initialMessages: ChatMessage[] = [INTRO_MESSAGE]
     setConversationHistory(initialMessages)
-
     try {
       const resp = await sendMentorMessage(initialMessages, 0)
       processResponse(resp, initialMessages)
@@ -107,7 +96,6 @@ export default function Mentor() {
     setInput('')
     setCurrentQuestion(null)
     setCurrentOptions([])
-
     try {
       const resp = await sendMentorMessage(newHistory, questionIndex)
       processResponse(resp, newHistory)
@@ -117,8 +105,21 @@ export default function Mentor() {
     }
   }
 
-  const handleOther = () => {
-    setShowOtherInput(true)
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics((prev) =>
+      prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic],
+    )
+  }
+
+  const addCustomTopic = (topic: string) => {
+    setSelectedTopics((prev) => (prev.includes(topic) ? prev : [...prev, topic]))
+  }
+
+  const handleMultiTopicContinue = () => {
+    if (selectedTopics.length === 0) return
+    const combined = selectedTopics.join(', ')
+    setSelectedTopics([])
+    selectOption(combined)
   }
 
   const sendCustomInput = () => {
@@ -131,7 +132,6 @@ export default function Mentor() {
     setCreating(true)
     const result = await createHabitsFromRoadmap(user.id, roadmap.habits)
     setCreating(false)
-
     if (result.success) {
       setCreated(true)
       refetchHabits?.()
@@ -154,6 +154,7 @@ export default function Mentor() {
     setCreated(false)
     setQuestionIndex(0)
     setInput('')
+    setSelectedTopics([])
     setCurrentQuestion(null)
     setCurrentOptions([])
     setShowOtherInput(false)
@@ -172,7 +173,8 @@ export default function Mentor() {
           Mentor IA
         </h1>
         <p className="text-muted-foreground">
-          Faça uma entrevista guiada e receba um plano de crescimento personalizado.
+          Faça uma entrevista guiada e receba um plano de crescimento personalizado com técnica
+          Pomodoro.
         </p>
       </div>
 
@@ -184,11 +186,12 @@ export default function Mentor() {
             </div>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3 max-w-2xl mx-auto">
-            Quer evoluir? Deixe nossa IA criar seu roteiro de estudos e hábitos personalizados.
+            Quer evoluir? Deixe nossa IA criar seu roteiro de estudos com Pomodoro e hábitos
+            personalizados.
           </h2>
           <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-            Responda algumas perguntas rápidas e receba um plano completo com hábitos sugeridos,
-            baseado em metodologias comprovadas de desenvolvimento pessoal.
+            Responda algumas perguntas rápidas e receba um plano completo com hábitos sugeridos e
+            cronograma Pomodoro, baseado em metodologias comprovadas de desenvolvimento pessoal.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -197,11 +200,11 @@ export default function Mentor() {
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Repeat size={16} className="text-primary" />
-              Hábitos automáticos
+              Múltiplos tópicos
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <TrendingUp size={16} className="text-primary" />
-              Baseado em livros
+              Técnica Pomodoro
             </div>
           </div>
           <Button
@@ -251,138 +254,88 @@ export default function Mentor() {
                 <Skeleton className="h-9 w-36 rounded-full" />
               </div>
             </div>
-          ) : (
-            currentQuestion && (
-              <div className="py-2">
-                <p className="text-lg md:text-xl font-medium leading-relaxed mb-6">
-                  {currentQuestion}
-                </p>
+          ) : currentQuestion ? (
+            <div className="py-2">
+              <p className="text-lg md:text-xl font-medium leading-relaxed mb-6">
+                {currentQuestion}
+              </p>
 
-                {currentOptions.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {currentOptions.map((option, i) => (
+              {isMultiTopicQuestion ? (
+                <MentorMultiTopicInput
+                  options={currentOptions}
+                  selectedTopics={selectedTopics}
+                  onToggleOption={toggleTopic}
+                  onAddCustom={addCustomTopic}
+                  onRemoveTopic={(t) => setSelectedTopics((prev) => prev.filter((x) => x !== t))}
+                  onContinue={handleMultiTopicContinue}
+                  isLoading={isLoading}
+                />
+              ) : (
+                <>
+                  {currentOptions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {currentOptions.map((option, i) => (
+                        <button
+                          key={i}
+                          onClick={() => selectOption(option)}
+                          disabled={isLoading}
+                          className="px-4 py-2 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {option}
+                        </button>
+                      ))}
                       <button
-                        key={i}
-                        onClick={() => selectOption(option)}
-                        disabled={isLoading}
-                        className="px-4 py-2 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setShowOtherInput(true)}
+                        disabled={isLoading || showOtherInput}
+                        className={cn(
+                          'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 flex items-center gap-1.5',
+                          showOtherInput
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                        )}
                       >
-                        {option}
+                        <Pencil size={14} />
+                        Outro...
                       </button>
-                    ))}
-                    <button
-                      onClick={handleOther}
-                      disabled={isLoading || showOtherInput}
-                      className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 flex items-center gap-1.5',
-                        showOtherInput
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80',
-                      )}
-                    >
-                      <Pencil size={14} />
-                      Outro...
-                    </button>
-                  </div>
-                )}
-
-                {showOtherInput && (
-                  <div className="flex gap-2 animate-fade-in-up">
-                    <Input
-                      ref={inputRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && sendCustomInput()}
-                      placeholder="Digite sua resposta..."
-                      className="rounded-full"
-                      disabled={isLoading}
-                    />
-                    <Button
-                      size="icon"
-                      className="rounded-full shrink-0"
-                      onClick={sendCustomInput}
-                      disabled={isLoading || !input.trim()}
-                    >
-                      <Send size={18} />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )
-          )}
+                    </div>
+                  )}
+                  {showOtherInput && (
+                    <div className="flex gap-2 animate-fade-in-up">
+                      <Input
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && sendCustomInput()}
+                        placeholder="Digite sua resposta..."
+                        className="rounded-full"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        size="icon"
+                        className="rounded-full shrink-0"
+                        onClick={sendCustomInput}
+                        disabled={isLoading || !input.trim()}
+                      >
+                        <Send size={18} />
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ) : null}
         </Card>
       )}
 
       {roadmap && (
-        <Card className="glass-card rounded-3xl border-none shadow-soft p-6 animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary/10 rounded-xl">
-              <Target className="text-primary" size={24} />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Plano de Crescimento</h2>
-              <p className="text-sm text-muted-foreground">
-                {roadmap.habits.length} hábitos personalizados para você
-              </p>
-            </div>
-          </div>
-
-          <p className="text-sm text-muted-foreground mb-4">{roadmap.content}</p>
-
-          <div className="space-y-3 mb-6">
-            {roadmap.habits.map((habit, i) => (
-              <div
-                key={i}
-                className="flex gap-3 p-4 rounded-2xl bg-background/60 border border-border/50"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <BookOpen size={16} className="text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-sm">{habit.title}</h3>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
-                      <Repeat size={10} />
-                      {habit.frequency}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{habit.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {created ? (
-            <div className="flex flex-col items-center gap-3 py-4">
-              <CheckCircle2 className="text-green-500" size={48} />
-              <p className="font-semibold text-center">
-                Hábitos criados! Acesse seu rastreador para começar.
-              </p>
-              <div className="flex gap-2">
-                <Button asChild>
-                  <Link to="/habitos">Ir para Hábitos</Link>
-                </Button>
-                <Button variant="outline" onClick={handleRestart}>
-                  Nova Entrevista
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Button className="w-full" size="lg" onClick={handleConfirm} disabled={creating}>
-              {creating ? (
-                <>
-                  <Loader2 size={18} className="animate-spin mr-2" />
-                  Criando hábitos...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={18} className="mr-2" />
-                  Confirmar e Criar Hábitos
-                </>
-              )}
-            </Button>
-          )}
-        </Card>
+        <MentorRoadmapPreview
+          content={roadmap.content}
+          habits={roadmap.habits}
+          created={created}
+          creating={creating}
+          onConfirm={handleConfirm}
+          onRestart={handleRestart}
+        />
       )}
     </div>
   )

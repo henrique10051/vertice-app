@@ -22,6 +22,9 @@ interface ProposedHabit {
   title: string
   description: string
   frequency: string
+  pomodoroSessions?: number
+  pomodoroMinutes?: number
+  breakMinutes?: number
 }
 
 interface MentorResponse {
@@ -37,13 +40,22 @@ const SYSTEM_PROMPT = `You are a personal growth mentor specialized in three fou
 2. "The Power of Habit" by Charles Duhigg — focus on the habit loop (cue-routine-reward), keystone habits, and belief in change.
 3. "The Richest Man in Babylon" by George S. Clason — focus on "pay yourself first" (save 10%), live below your means, make your money work for you, and the five laws of gold.
 
-When giving advice, always reference the relevant methodology from these books. Keep responses practical, actionable, and in Portuguese. When health data is available, also consider the user's calorie and water intake, relating it to habit formation and discipline principles from the books.`
+When giving advice, always reference the relevant methodology from these books. Keep responses practical, actionable, and in Portuguese.
+
+IMPORTANT - Pomodoro Integration:
+- Structure study routines using the Pomodoro Method (25 minutes study / 5 minutes break)
+- For each study topic, specify the number of Pomodoro sessions (1-4 sessions)
+- Include Pomodoro timing in habit descriptions (e.g., "25/5 min cycles, 2 sessions")
+- The description field MUST contain specific Pomodoro instructions
+- Create one habit per study topic with its own Pomodoro sessions
+
+When health data is available, also consider the user's calorie and water intake, relating it to habit formation and discipline principles from the books.`
 
 const FALLBACK_QUESTIONS: { content: string; options: string[] }[] = [
   {
     content:
-      'Olá! Sou seu Mentor de Crescimento Pessoal. Primeiro: O que você quer estudar ou desenvolver?',
-    options: ['Programação', 'Idiomas', 'Liderança', 'Finanças', 'Saúde e Fitness'],
+      'Olá! Sou seu Mentor de Crescimento Pessoal. Quais tópicos você quer estudar ou desenvolver? Você pode selecionar vários e também adicionar novos!',
+    options: ['Programação', 'Idiomas', 'Liderança', 'Finanças', 'Saúde e Fitness', 'Medicina'],
   },
   {
     content: 'Excelente! Quanto tempo você pode dedicar por dia a esses objetivos?',
@@ -71,73 +83,118 @@ const FALLBACK_QUESTIONS: { content: string; options: string[] }[] = [
   },
   {
     content:
-      'Muito útil! Você prefere estudar/praticar de manhã, à tarde ou à noite? Isso me ajuda a sugerir a melhor rotina.',
+      'Muito útil! Você prefere estudar/praticar de manhã, à tarde ou à noite? Isso me ajuda a sugerir a melhor rotina com Pomodoro.',
     options: ['Manhã', 'Tarde', 'Noite', 'Horários variados'],
   },
 ]
 
+function parseTopics(answer: string): string[] {
+  return answer
+    .split(/[,;]/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0)
+}
+
 function generateFallbackRoadmap(answers: string[]): MentorResponse {
+  const topicsAnswer = answers[0] || ''
   const combined = answers.join(' ').toLowerCase()
-  const habits: ProposedHabit[] = [
-    {
-      title: 'Estudo Focado (25 min)',
-      description:
-        'Use a técnica Pomodoro: 25 min de estudo focado seguido de 5 min de pausa. Baseado na Regra dos 2 Minutos de James Clear.',
-      frequency: 'daily',
-    },
-  ]
+  const topics = parseTopics(topicsAnswer)
 
-  if (combined.includes('program') || combined.includes('código') || combined.includes('tech')) {
-    habits.push({
-      title: 'Prática de Código (30 min)',
-      description:
-        'Resolva um exercício ou construa um pequeno projeto diariamente. Empilhamento de hábitos: "Depois do café, pratico código".',
-      frequency: 'daily',
-    })
-  }
+  const habits: ProposedHabit[] = []
 
-  if (combined.includes('idiom') || combined.includes('inglês') || combined.includes('english')) {
+  topics.forEach((topic) => {
+    const topicLower = topic.toLowerCase()
+    let sessions = 2
+    if (
+      topicLower.includes('medic') ||
+      topicLower.includes('anatom') ||
+      topicLower.includes('biolog')
+    ) {
+      sessions = 3
+    }
+
     habits.push({
-      title: 'Estudo de Idioma (20 min)',
-      description:
-        'Pratique vocabulário e conversação. "Eu sou alguém que fala outro idioma" — identidade-based habits.',
+      title: `Estudar ${topic} (${sessions}× Pomodoro)`,
+      description: `Estude ${topic} usando o método Pomodoro: ${sessions} ciclos de 25 min de estudo focado + 5 min de pausa (25/5 min cycles). Baseado na Regra dos 2 Minutos de James Clear. Empilhamento de hábitos: "Depois do café, estudo ${topic}".`,
       frequency: 'daily',
+      pomodoroSessions: sessions,
+      pomodoroMinutes: 25,
+      breakMinutes: 5,
     })
+  })
+
+  if (habits.length === 0) {
+    if (combined.includes('program') || combined.includes('código') || combined.includes('tech')) {
+      habits.push({
+        title: 'Prática de Código (2× Pomodoro)',
+        description:
+          'Resolva um exercício ou projeto. 2 ciclos de 25/5 min (Pomodoro). Empilhamento: "Depois do café, pratico código".',
+        frequency: 'daily',
+        pomodoroSessions: 2,
+        pomodoroMinutes: 25,
+        breakMinutes: 5,
+      })
+    }
+    if (combined.includes('idiom') || combined.includes('inglês') || combined.includes('english')) {
+      habits.push({
+        title: 'Estudo de Idioma (2× Pomodoro)',
+        description:
+          'Pratique vocabulário e conversação. 2 ciclos de 25/5 min (Pomodoro). Identity-based habits.',
+        frequency: 'daily',
+        pomodoroSessions: 2,
+        pomodoroMinutes: 25,
+        breakMinutes: 5,
+      })
+    }
+    if (habits.length === 0) {
+      habits.push({
+        title: 'Estudo Focado (2× Pomodoro)',
+        description:
+          '2 ciclos de 25 min estudo + 5 min pausa (25/5 min cycles). Regra dos 2 Minutos de James Clear.',
+        frequency: 'daily',
+        pomodoroSessions: 2,
+        pomodoroMinutes: 25,
+        breakMinutes: 5,
+      })
+    }
   }
 
   if (combined.includes('financ') || combined.includes('dinheiro') || combined.includes('econom')) {
     habits.push({
       title: 'Revisão Financeira Semanal',
       description:
-        'Reserve 10% de tudo que ganha (O Homem Mais Rico da Babilônia). Registre gastos e revise investimentos.',
+        'Reserve 10% de tudo que ganha (Babilônia). Registre gastos. 1 ciclo de 25/5 min (Pomodoro).',
       frequency: 'weekly',
+      pomodoroSessions: 1,
+      pomodoroMinutes: 25,
+      breakMinutes: 5,
     })
   }
 
   habits.push({
     title: 'Planejamento Diário (10 min)',
-    description: 'Liste 3 prioridades do dia. Sistemas > Metas (James Clear).',
+    description:
+      'Liste 3 prioridades do dia e organize os blocos de Pomodoro. Sistemas > Metas (James Clear).',
     frequency: 'daily',
   })
 
   habits.push({
     title: 'Caminhada (20 min)',
     description:
-      'Movimento leve diário. Hábito keystone que melhora foco e disciplina (Charles Duhigg).',
+      'Movimento leve diário. Hábito keystone (Duhigg). Ideal entre sessões de Pomodoro.',
     frequency: 'daily',
   })
 
   habits.push({
     title: 'Reflexão Noturna (5 min)',
     description:
-      'Anote 1 vitória do dia e 1 melhoria. Feche o loop: Gatilho → Rotina → Recompensa.',
+      'Anote 1 vitória do dia e 1 melhoria. Feche o loop: Gatilho → Rotina → Recompensa. Revise Pomodoros.',
     frequency: 'daily',
   })
 
   return {
     type: 'roadmap',
-    content:
-      'Baseado nas suas respostas, criei um plano personalizado inspirado em "Hábitos Atômicos", "O Poder do Hábito" e "O Homem Mais Rico da Babilônia". O plano foca em construir sistemas, usar hábitos âncora e melhorar 1% por dia.',
+    content: `Baseado nas suas respostas, criei um plano personalizado com ${topics.length || habits.length} tópico(s) integrando o método Pomodoro (25/5 min). Inspirado em "Hábitos Atômicos", "O Poder do Hábito" e "O Homem Mais Rico da Babilônia". Foque em construir sistemas, usar hábitos âncora e melhorar 1% por dia.`,
     habits,
   }
 }
@@ -173,7 +230,7 @@ async function getOpenAIInterviewResponse(
       { role: 'system', content: SYSTEM_PROMPT },
       {
         role: 'user',
-        content: `O usuário respondeu as seguintes perguntas da entrevista:\n${userAnswers.map((a, i) => `${i + 1}. ${a}`).join('\n')}\n\nCom base nessas respostas, crie um plano de crescimento personalizado. Responda APENAS com JSON válido no formato:\n{"type":"roadmap","content":"resumo do plano","habits":[{"title":"...","description":"...","frequency":"daily|weekly"}]}`,
+        content: `O usuário respondeu as seguintes perguntas da entrevista:\n${userAnswers.map((a, i) => `${i + 1}. ${a}`).join('\n')}\n\nCom base nessas respostas, crie um plano de crescimento personalizado integrando o método Pomodoro (25 min estudo / 5 min pausa). Para CADA tópico de estudo mencionado, crie um hábito separado com sessões de Pomodoro. A descrição de cada hábito deve incluir as instruções de Pomodoro (ex: "2 ciclos de 25/5 min"). Responda APENAS com JSON válido no formato:\n{"type":"roadmap","content":"resumo do plano","habits":[{"title":"...","description":"instruções com Pomodoro (ex: 25/5 min cycles, 2 sessions)","frequency":"daily|weekly","pomodoroSessions":2,"pomodoroMinutes":25,"breakMinutes":5}]}`,
       },
     ]
 
@@ -184,7 +241,7 @@ async function getOpenAIInterviewResponse(
         model: 'gpt-4o-mini',
         messages: promptMessages,
         temperature: 0.7,
-        max_tokens: 800,
+        max_tokens: 1000,
       }),
     })
 
@@ -196,7 +253,18 @@ async function getOpenAIInterviewResponse(
     try {
       const parsed = JSON.parse(content)
       if (parsed.type === 'roadmap' && Array.isArray(parsed.habits)) {
-        return parsed as MentorResponse
+        return {
+          type: 'roadmap',
+          content: parsed.content || 'Plano de crescimento personalizado com Pomodoro.',
+          habits: parsed.habits.map((h: any) => ({
+            title: h.title || 'Hábito',
+            description: h.description || '',
+            frequency: h.frequency || 'daily',
+            pomodoroSessions: h.pomodoroSessions,
+            pomodoroMinutes: h.pomodoroMinutes,
+            breakMinutes: h.breakMinutes,
+          })) as ProposedHabit[],
+        }
       }
     } catch {
       return null
@@ -209,13 +277,14 @@ async function getOpenAIInterviewResponse(
       ? userAnswers.map((a, i) => `${i + 1}. ${a}`).join('\n')
       : 'Nenhuma ainda (esta é a primeira pergunta)'
 
+  const isFirstQuestion = questionIndex === 0
+
+  const interviewInstructions = isFirstQuestion
+    ? 'You are conducting a brief 5-question interview in Portuguese. The FIRST question must ask the user about ALL topics/subjects they want to study — encourage them to list multiple topics (e.g., "Inglês", "Medicina", "Programação"). Provide 4-6 suggested answer options as short phrases in Portuguese.'
+    : 'You are conducting a brief 5-question interview in Portuguese to create a personalized growth plan with Pomodoro integration. Ask one question at a time. Also provide 3-5 suggested answer options as short phrases in Portuguese.'
+
   const promptMessages = [
-    {
-      role: 'system',
-      content:
-        SYSTEM_PROMPT +
-        '\n\nYou are conducting a brief 5-question interview in Portuguese to create a personalized growth plan. Ask one question at a time. Also provide 3-5 suggested answer options as short phrases in Portuguese.',
-    },
+    { role: 'system', content: SYSTEM_PROMPT + '\n\n' + interviewInstructions },
     {
       role: 'user',
       content: `Respostas anteriores:\n${answersStr}\n\nNúmero da pergunta: ${questionIndex + 1} de ${FALLBACK_QUESTIONS.length}\n\nResponda APENAS com JSON: {"type":"question","content":"sua pergunta em português","suggestedOptions":["opção1","opção2","opção3"],"questionIndex":${questionIndex + 1}}`,
@@ -286,7 +355,7 @@ function generateInsight(message: string, context: AIMentorContext): string {
       msg.includes('alimentação') ||
       msg.includes('saúde'))
   ) {
-    return `Baseado em "Hábitos Atômicos" e seus dados de saúde:\n\n💧 Água hoje: ${(healthInfo.water_intake_ml / 1000).toFixed(1)}L de ${(healthInfo.water_goal_ml / 1000).toFixed(1)}L (${waterPct}%)\n🔥 Calorias: ${healthInfo.calories_consumed} / ${healthInfo.calorie_goal} kcal\n\n💡 Estratégias dos livros:\n• Empilhamento de Hábitos: "Depois de acordar, bebo um copo de água"\n• Regra dos 2 Minutos: comece com um gole, não o litro todo\n• Projete o ambiente: deixe uma garrafa visível na mesa\n• Identidade: "Eu sou alguém que se cuida"\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📊 ${waterPct >= 100 ? 'Meta de hidratação concluída! Mantenha o ritmo!' : 'Progresso consistente vence perfeição!'}`
+    return `Baseado em "Hábitos Atômicos" e seus dados de saúde:\n\n💧 Água hoje: ${(healthInfo.water_intake_ml / 1000).toFixed(1)}L de ${(healthInfo.water_goal_ml / 1000).toFixed(1)}L (${waterPct}%)\n🔥 Calorias: ${healthInfo.calories_consumed} / ${healthInfo.calorie_goal} kcal\n\n💡 Estratégias dos livros + Pomodoro:\n• Empilhamento: "Depois de acordar, bebo um copo de água"\n• Regra dos 2 Minutos: comece com um gole\n• Projete o ambiente: garrafa visível na mesa\n• Use Pomodoro para refeições conscientes (25 min sem tela)\n• Identidade: "Eu sou alguém que se cuida"\n\n📊 ${waterPct >= 100 ? 'Meta de hidratação concluída!' : 'Progresso consistente vence perfeição!'}`
   }
 
   if (
@@ -295,28 +364,30 @@ function generateInsight(message: string, context: AIMentorContext): string {
     msg.includes('save') ||
     msg.includes('dinheiro')
   ) {
-    return `Baseado em "O Homem Mais Rico da Babilônia" e no seu perfil financeiro:\n\n📊 Taxa de poupança atual: ${savingsRate}%. ${savingsRate > 20 ? 'Excelente!' : 'Há espaço para melhorar.'}\n\n🏛️ Lei de Ouro: "Pague a si mesmo primeiro" — reserve 10% de tudo que ganha antes de qualquer outra despesa.\n\n💡 Ações práticas:\n• Aplique a regra 50/30/20 (necessidades/desejos/poupança)\n• Automatize seus investimentos no início do mês\n• Faça seu dinheiro trabalhar por você (juros compostos)\n• Controle despesas: "viva com menos do que ganha"`
+    return `Baseado em "O Homem Mais Rico da Babilônia" e seu perfil:\n\n📊 Taxa de poupança: ${savingsRate}%. ${savingsRate > 20 ? 'Excelente!' : 'Há espaço para melhorar.'}\n\n🏛️ "Pague a si mesmo primeiro" — reserve 10% antes de qualquer despesa.\n\n💡 Ações:\n• Regra 50/30/20 (necessidades/desejos/poupança)\n• Automatize investimentos no início do mês\n• Juros compostos: faça seu dinheiro trabalhar\n• Controle despesas: "viva com menos do que ganha"`
   }
 
   if (
     msg.includes('rotina') ||
     msg.includes('manhã') ||
     msg.includes('morning') ||
-    msg.includes('habit')
+    msg.includes('habit') ||
+    msg.includes('pomodoro') ||
+    msg.includes('pomodore')
   ) {
-    return `Inspirado em "Hábitos Atômicos" (James Clear) e "O Poder do Hábito" (Charles Duhigg):\n\n🎯 ${totalHabits} hábitos ativos, ${completedToday} concluídos hoje.\n\n🔄 O Loop do Hábito: Gatilho → Rotina → Recompensa\n\n💡 Estratégias dos livros:\n• Regra dos 2 Minutos: comece pequeno (1 página, 1 agachamento)\n• Empilhamento de Hábitos: "Depois de [X], farei [Y]"\n• Identidade: "Eu sou alguém que..." em vez de "Eu quero..."\n• Melhore 1% por dia = 37x melhor em 1 ano`
+    return `Inspirado em "Hábitos Atômicos" e "O Poder do Hábito":\n\n🎯 ${totalHabits} hábitos ativos, ${completedToday} concluídos hoje.\n\n🍅 Método Pomodoro:\n• 25 min de foco + 5 min de pausa\n• 4 ciclos = 1 sessão completa (descanso longo de 15-30 min)\n• Ideal para cada tópico de estudo\n\n🔄 Loop do Hábito: Gatilho → Rotina → Recompensa\n\n💡 Estratégias:\n• Regra dos 2 Minutos: comece pequeno\n• Empilhamento: "Depois de [X], faço [Y]"\n• Identidade: "Eu sou alguém que..." vs "Eu quero..."\n• Melhore 1% por dia = 37x melhor em 1 ano`
   }
 
   if (msg.includes('objetivo') || msg.includes('meta') || msg.includes('goal')) {
-    return `Baseado em "Hábitos Atômicos" e seus objetivos:\n\n🎯 ${activeGoals} objetivo(s) em progresso.\n\n💡 Princípios de James Clear:\n• Sistemas > Metas: foque no processo, não só no resultado\n• Divida metas em micro-passos diários (regra dos 2 min)\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📈 Progresso, não perfeição!`
+    return `Baseado em "Hábitos Atômicos" e seus objetivos:\n\n🎯 ${activeGoals} objetivo(s) em progresso.\n\n💡 Princípios de James Clear:\n• Sistemas > Metas: foque no processo\n• Divida metas em micro-passos diários (regra dos 2 min)\n• Use Pomodoro para cada micro-passo (25/5 min)\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📈 Progresso, não perfeição!`
   }
 
   if (msg.includes('prioritar') || msg.includes('priorit')) {
-    return `Com base em "O Poder do Hábito" e seus dados:\n\n📈 Hábitos concluídos hoje: ${completedToday} de ${totalHabits}.\n\n🔑 Hábitos Keystone (Duhigg):\n• Identifique 1 hábito que catalisa outros (ex: exercício)\n• Priorize hábitos matinais — definem o tom do dia\n• Foque em UM novo hábito por vez\n\n⚡ Regra dos 2 Minutos (Clear): comece pela versão mais fácil do hábito.`
+    return `Com base em "O Poder do Hábito" e seus dados:\n\n📈 Hábitos concluídos hoje: ${completedToday} de ${totalHabits}.\n\n🔑 Hábitos Keystone (Duhigg):\n• Identifique 1 hábito que catalisa outros\n• Priorize hábitos matinais — definem o tom do dia\n• Foque em UM novo hábito por vez\n• Use Pomodoro: 25 min de foco total no hábito prioritário\n\n⚡ Regra dos 2 Minutos (Clear): comece pela versão mais fácil.`
   }
 
   const healthStr = healthInfo ? `, ${waterPct}% da meta de água` : ''
-  return `Olá! Sou seu mentor de crescimento, especialista em:\n\n📚 "Hábitos Atômicos" (James Clear) — sistemas e identidade\n📚 "O Poder do Hábito" (Charles Duhigg) — loop do hábito e hábitos âncora\n📚 "O Homem Mais Rico da Babilônia" (Clason) — finanças pessoais\n\nSeus dados: ${totalHabits} hábitos, ${activeGoals} objetivos ativos, taxa de poupança de ${savingsRate}%${healthStr}.\n\nPergunte sobre poupança, rotina, hábitos, saúde ou objetivos!`
+  return `Olá! Sou seu mentor de crescimento, especialista em:\n\n📚 "Hábitos Atômicos" (James Clear) — sistemas e identidade\n📚 "O Poder do Hábito" (Charles Duhigg) — loop do hábito e hábitos âncora\n📚 "O Homem Mais Rico da Babilônia" (Clason) — finanças pessoais\n🍅 Método Pomodoro — 25 min foco / 5 min pausa\n\nSeus dados: ${totalHabits} hábitos, ${activeGoals} objetivos ativos, taxa de poupança de ${savingsRate}%${healthStr}.\n\nPergunte sobre poupança, rotina, hábitos, Pomodoro, saúde ou objetivos!`
 }
 
 async function getOpenAIResponse(
