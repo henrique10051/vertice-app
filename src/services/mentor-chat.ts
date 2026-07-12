@@ -16,14 +16,44 @@ export interface MentorResponse {
   content: string
   habits?: ProposedHabit[]
   questionIndex?: number
+  suggestedOptions?: string[]
 }
 
-const FALLBACK_QUESTIONS = [
-  'Olá! Sou seu Mentor de Crescimento Pessoal. Vou conduzir uma breve entrevista para montar um plano personalizado para você. Primeiro: O que você quer estudar ou desenvolver? (ex: programação, idiomas, liderança, finanças)',
-  'Excelente! Quanto tempo você pode dedicar por dia a esses objetivos? (ex: 30 minutos, 1 hora, 2 horas)',
-  'Ótimo! Quais habilidades específicas você quer melhorar? (ex: concentração, disciplina, comunicação, organização financeira)',
-  'Perfeito! Qual é seu maior desafio atual em relação a esses objetivos? (ex: falta de rotina, procrastinação, gestão de tempo)',
-  'Muito útil! Você prefere estudar/praticar de manhã, à tarde ou à noite? Isso me ajuda a sugerir a melhor rotina.',
+const FALLBACK_QUESTIONS: { content: string; options: string[] }[] = [
+  {
+    content:
+      'Olá! Sou seu Mentor de Crescimento Pessoal. Primeiro: O que você quer estudar ou desenvolver?',
+    options: ['Programação', 'Idiomas', 'Liderança', 'Finanças', 'Saúde e Fitness'],
+  },
+  {
+    content: 'Excelente! Quanto tempo você pode dedicar por dia a esses objetivos?',
+    options: ['30 minutos', '1 hora', '2 horas', 'Mais de 2 horas'],
+  },
+  {
+    content: 'Ótimo! Quais habilidades específicas você quer melhorar?',
+    options: [
+      'Concentração',
+      'Disciplina',
+      'Comunicação',
+      'Organização financeira',
+      'Gestão de tempo',
+    ],
+  },
+  {
+    content: 'Perfeito! Qual é seu maior desafio atual em relação a esses objetivos?',
+    options: [
+      'Falta de rotina',
+      'Procrastinação',
+      'Gestão de tempo',
+      'Falta de motivação',
+      'Distrações',
+    ],
+  },
+  {
+    content:
+      'Muito útil! Você prefere estudar/praticar de manhã, à tarde ou à noite? Isso me ajuda a sugerir a melhor rotina.',
+    options: ['Manhã', 'Tarde', 'Noite', 'Horários variados'],
+  },
 ]
 
 function generateFallbackRoadmap(answers: string[]): MentorResponse {
@@ -99,7 +129,8 @@ export function getFallbackResponse(messages: ChatMessage[]): MentorResponse {
   if (questionIndex < FALLBACK_QUESTIONS.length) {
     return {
       type: 'question',
-      content: FALLBACK_QUESTIONS[questionIndex],
+      content: FALLBACK_QUESTIONS[questionIndex].content,
+      suggestedOptions: FALLBACK_QUESTIONS[questionIndex].options,
       questionIndex: questionIndex + 1,
     }
   }
@@ -120,7 +151,16 @@ export async function sendMentorMessage(
       return getFallbackResponse(messages)
     }
 
-    return data as MentorResponse
+    const resp = data as MentorResponse
+
+    if (resp.type === 'question' && !resp.suggestedOptions) {
+      const fallbackQ = FALLBACK_QUESTIONS[questionIndex]
+      if (fallbackQ) {
+        resp.suggestedOptions = fallbackQ.options
+      }
+    }
+
+    return resp
   } catch {
     return getFallbackResponse(messages)
   }

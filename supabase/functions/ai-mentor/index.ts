@@ -29,6 +29,7 @@ interface MentorResponse {
   content: string
   habits?: ProposedHabit[]
   questionIndex?: number
+  suggestedOptions?: string[]
 }
 
 const SYSTEM_PROMPT = `You are a personal growth mentor specialized in three foundational books:
@@ -38,12 +39,41 @@ const SYSTEM_PROMPT = `You are a personal growth mentor specialized in three fou
 
 When giving advice, always reference the relevant methodology from these books. Keep responses practical, actionable, and in Portuguese. When health data is available, also consider the user's calorie and water intake, relating it to habit formation and discipline principles from the books.`
 
-const FALLBACK_QUESTIONS = [
-  'Olá! Sou seu Mentor de Crescimento Pessoal. Vou conduzir uma breve entrevista para montar um plano personalizado para você. Primeiro: O que você quer estudar ou desenvolver? (ex: programação, idiomas, liderança, finanças)',
-  'Excelente! Quanto tempo você pode dedicar por dia a esses objetivos? (ex: 30 minutos, 1 hora, 2 horas)',
-  'Ótimo! Quais habilidades específicas você quer melhorar? (ex: concentração, disciplina, comunicação, organização financeira)',
-  'Perfeito! Qual é seu maior desafio atual em relação a esses objetivos? (ex: falta de rotina, procrastinação, gestão de tempo)',
-  'Muito útil! Você prefere estudar/praticar de manhã, à tarde ou à noite? Isso me ajuda a sugerir a melhor rotina.',
+const FALLBACK_QUESTIONS: { content: string; options: string[] }[] = [
+  {
+    content:
+      'Olá! Sou seu Mentor de Crescimento Pessoal. Primeiro: O que você quer estudar ou desenvolver?',
+    options: ['Programação', 'Idiomas', 'Liderança', 'Finanças', 'Saúde e Fitness'],
+  },
+  {
+    content: 'Excelente! Quanto tempo você pode dedicar por dia a esses objetivos?',
+    options: ['30 minutos', '1 hora', '2 horas', 'Mais de 2 horas'],
+  },
+  {
+    content: 'Ótimo! Quais habilidades específicas você quer melhorar?',
+    options: [
+      'Concentração',
+      'Disciplina',
+      'Comunicação',
+      'Organização financeira',
+      'Gestão de tempo',
+    ],
+  },
+  {
+    content: 'Perfeito! Qual é seu maior desafio atual em relação a esses objetivos?',
+    options: [
+      'Falta de rotina',
+      'Procrastinação',
+      'Gestão de tempo',
+      'Falta de motivação',
+      'Distrações',
+    ],
+  },
+  {
+    content:
+      'Muito útil! Você prefere estudar/praticar de manhã, à tarde ou à noite? Isso me ajuda a sugerir a melhor rotina.',
+    options: ['Manhã', 'Tarde', 'Noite', 'Horários variados'],
+  },
 ]
 
 function generateFallbackRoadmap(answers: string[]): MentorResponse {
@@ -119,7 +149,8 @@ function getInterviewResponse(messages: ChatMessage[], questionIndex: number): M
   if (currentIndex < FALLBACK_QUESTIONS.length) {
     return {
       type: 'question',
-      content: FALLBACK_QUESTIONS[currentIndex],
+      content: FALLBACK_QUESTIONS[currentIndex].content,
+      suggestedOptions: FALLBACK_QUESTIONS[currentIndex].options,
       questionIndex: currentIndex + 1,
     }
   }
@@ -148,10 +179,7 @@ async function getOpenAIInterviewResponse(
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: promptMessages,
@@ -176,6 +204,55 @@ async function getOpenAIInterviewResponse(
     return null
   }
 
+  const answersStr =
+    userAnswers.length > 0
+      ? userAnswers.map((a, i) => `${i + 1}. ${a}`).join('\n')
+      : 'Nenhuma ainda (esta é a primeira pergunta)'
+
+  const promptMessages = [
+    {
+      role: 'system',
+      content:
+        SYSTEM_PROMPT +
+        '\n\nYou are conducting a brief 5-question interview in Portuguese to create a personalized growth plan. Ask one question at a time. Also provide 3-5 suggested answer options as short phrases in Portuguese.',
+    },
+    {
+      role: 'user',
+      content: `Respostas anteriores:\n${answersStr}\n\nNúmero da pergunta: ${questionIndex + 1} de ${FALLBACK_QUESTIONS.length}\n\nResponda APENAS com JSON: {"type":"question","content":"sua pergunta em português","suggestedOptions":["opção1","opção2","opção3"],"questionIndex":${questionIndex + 1}}`,
+    },
+  ]
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: promptMessages,
+      temperature: 0.7,
+      max_tokens: 400,
+    }),
+  })
+
+  if (!response.ok) return null
+  const data = await response.json()
+  const content = data.choices?.[0]?.message?.content
+  if (!content) return null
+
+  try {
+    const parsed = JSON.parse(content)
+    if (parsed.type === 'question' && parsed.content) {
+      return {
+        type: 'question',
+        content: parsed.content,
+        suggestedOptions: Array.isArray(parsed.suggestedOptions)
+          ? parsed.suggestedOptions
+          : FALLBACK_QUESTIONS[questionIndex]?.options || [],
+        questionIndex: questionIndex + 1,
+      } as MentorResponse
+    }
+  } catch {
+    return null
+  }
   return null
 }
 
@@ -184,7 +261,6 @@ function generateInsight(message: string, context: AIMentorContext): string {
 
   const totalHabits = context.habits.length
   const completedToday = context.habits.filter((h) => h.is_completed).length
-
   const income = context.transactions
     .filter((t) => t.type === 'income')
     .reduce((a, b) => a + b.amount, 0)
@@ -210,7 +286,7 @@ function generateInsight(message: string, context: AIMentorContext): string {
       msg.includes('alimentação') ||
       msg.includes('saúde'))
   ) {
-    return `Baseado em "Hábitos Atômicos" e seus dados de saúde:\n\n💧 Água hoje: ${(healthInfo.water_intake_ml / 1000).toFixed(1)}L de ${(healthInfo.water_goal_ml / 1000).toFixed(1)}L (${waterPct}%)\n🔥 Calorias: ${healthInfo.calories_consumed} / ${healthInfo.calorie_goal} kcal\n\n💡 Estratégias dos livros:\n• Empilhamento de Hábitos: "Depois de acordar, bebo um copo de água"\n• Regra dos 2 Minutos: comece com um gole, não o litro todo\n• Projete o ambiente: deixe uma garrafa visível na mesa\n• Identidade: "Eu sou alguém que se cuida"\n• Hábito âncora: hidratação pode catalisar melhores escolhas alimentares\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📊 ${waterPct >= 100 ? 'Meta de hidratação concluída! Mantenha o ritmo!' : 'Progresso consistente vence perfeição!'}`
+    return `Baseado em "Hábitos Atômicos" e seus dados de saúde:\n\n💧 Água hoje: ${(healthInfo.water_intake_ml / 1000).toFixed(1)}L de ${(healthInfo.water_goal_ml / 1000).toFixed(1)}L (${waterPct}%)\n🔥 Calorias: ${healthInfo.calories_consumed} / ${healthInfo.calorie_goal} kcal\n\n💡 Estratégias dos livros:\n• Empilhamento de Hábitos: "Depois de acordar, bebo um copo de água"\n• Regra dos 2 Minutos: comece com um gole, não o litro todo\n• Projete o ambiente: deixe uma garrafa visível na mesa\n• Identidade: "Eu sou alguém que se cuida"\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📊 ${waterPct >= 100 ? 'Meta de hidratação concluída! Mantenha o ritmo!' : 'Progresso consistente vence perfeição!'}`
   }
 
   if (
@@ -219,7 +295,7 @@ function generateInsight(message: string, context: AIMentorContext): string {
     msg.includes('save') ||
     msg.includes('dinheiro')
   ) {
-    return `Baseado em "O Homem Mais Rico da Babilônia" e no seu perfil financeiro:\n\n📊 Taxa de poupança atual: ${savingsRate}%. ${savingsRate > 20 ? 'Excelente!' : 'Há espaço para melhorar.'}\n\n🏛️ Lei de Ouro: "Pague a si mesmo primeiro" — reserve 10% de tudo que ganha antes de qualquer outra despesa.\n\n💡 Ações práticas:\n• Aplique a regra 50/30/20 (necessidades/desejos/poupança)\n• Automatize seus investimentos no início do mês\n• Faça seu dinheiro trabalhar por você (juros compostos)\n• Controle despesas: "viva com menos do que ganha"\n• Invista em oportunidades que conhece bem`
+    return `Baseado em "O Homem Mais Rico da Babilônia" e no seu perfil financeiro:\n\n📊 Taxa de poupança atual: ${savingsRate}%. ${savingsRate > 20 ? 'Excelente!' : 'Há espaço para melhorar.'}\n\n🏛️ Lei de Ouro: "Pague a si mesmo primeiro" — reserve 10% de tudo que ganha antes de qualquer outra despesa.\n\n💡 Ações práticas:\n• Aplique a regra 50/30/20 (necessidades/desejos/poupança)\n• Automatize seus investimentos no início do mês\n• Faça seu dinheiro trabalhar por você (juros compostos)\n• Controle despesas: "viva com menos do que ganha"`
   }
 
   if (
@@ -228,15 +304,15 @@ function generateInsight(message: string, context: AIMentorContext): string {
     msg.includes('morning') ||
     msg.includes('habit')
   ) {
-    return `Inspirado em "Hábitos Atômicos" (James Clear) e "O Poder do Hábito" (Charles Duhigg):\n\n🎯 ${totalHabits} hábitos ativos, ${completedToday} concluídos hoje.\n\n🔄 O Loop do Hábito: Gatilho → Rotina → Recompensa\n\n💡 Estratégias dos livros:\n• Regra dos 2 Minutos: comece pequeno (1 página, 1 agachamento)\n• Empilhamento de Hábitos: "Depois de [X], farei [Y]"\n• Identidade: "Eu sou alguém que..." em vez de "Eu quero..."\n• Hábitos âncora: escolha 1 hábito que transforma outros (keystone habit)\n• Melhore 1% por dia = 37x melhor em 1 ano\n• Projete seu ambiente para facilitar bons hábitos`
+    return `Inspirado em "Hábitos Atômicos" (James Clear) e "O Poder do Hábito" (Charles Duhigg):\n\n🎯 ${totalHabits} hábitos ativos, ${completedToday} concluídos hoje.\n\n🔄 O Loop do Hábito: Gatilho → Rotina → Recompensa\n\n💡 Estratégias dos livros:\n• Regra dos 2 Minutos: comece pequeno (1 página, 1 agachamento)\n• Empilhamento de Hábitos: "Depois de [X], farei [Y]"\n• Identidade: "Eu sou alguém que..." em vez de "Eu quero..."\n• Melhore 1% por dia = 37x melhor em 1 ano`
   }
 
   if (msg.includes('objetivo') || msg.includes('meta') || msg.includes('goal')) {
-    return `Baseado em "Hábitos Atômicos" e seus objetivos:\n\n🎯 ${activeGoals} objetivo(s) em progresso.\n\n💡 Princípios de James Clear:\n• Sistemas > Metas: foque no processo, não só no resultado\n• Divida metas em micro-passos diários (regra dos 2 min)\n• Crie um sistema de marcos intermediários\n• Conecte cada hábito a um objetivo de identidade\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📈 Progresso, não perfeição!`
+    return `Baseado em "Hábitos Atômicos" e seus objetivos:\n\n🎯 ${activeGoals} objetivo(s) em progresso.\n\n💡 Princípios de James Clear:\n• Sistemas > Metas: foque no processo, não só no resultado\n• Divida metas em micro-passos diários (regra dos 2 min)\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📈 Progresso, não perfeição!`
   }
 
-  if (msg.includes('priorizar') || msg.includes('priorit')) {
-    return `Com base em "O Poder do Hábito" e seus dados:\n\n📈 Hábitos concluídos hoje: ${completedToday} de ${totalHabits}.\n\n🔑 Hábitos Keystone (Duhigg):\n• Identifique 1 hábito que catalisa outros (ex: exercício)\n• Priorize hábitos matinais — definem o tom do dia\n• Foque em UM novo hábito por vez\n• Use a "cadeia" de hábitos: encadeie comportamentos\n\n⚡ Regra dos 2 Minutos (Clear): comece pela versão mais fácil do hábito.`
+  if (msg.includes('prioritar') || msg.includes('priorit')) {
+    return `Com base em "O Poder do Hábito" e seus dados:\n\n📈 Hábitos concluídos hoje: ${completedToday} de ${totalHabits}.\n\n🔑 Hábitos Keystone (Duhigg):\n• Identifique 1 hábito que catalisa outros (ex: exercício)\n• Priorize hábitos matinais — definem o tom do dia\n• Foque em UM novo hábito por vez\n\n⚡ Regra dos 2 Minutos (Clear): comece pela versão mais fácil do hábito.`
   }
 
   const healthStr = healthInfo ? `, ${waterPct}% da meta de água` : ''
@@ -268,10 +344,7 @@ async function getOpenAIResponse(
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       messages: [
