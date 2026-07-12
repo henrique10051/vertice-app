@@ -5,6 +5,12 @@ interface AIMentorContext {
   habits: { title: string; is_completed: boolean; frequency: string }[]
   transactions: { amount: number; type: 'income' | 'expense'; category: string }[]
   goals: { title: string; status: string; subtasks: { completed: boolean }[] }[]
+  health?: {
+    calories_consumed: number
+    calorie_goal: number
+    water_intake_ml: number
+    water_goal_ml: number
+  }
 }
 
 const SYSTEM_PROMPT = `You are a personal growth mentor specialized in three foundational books:
@@ -12,7 +18,7 @@ const SYSTEM_PROMPT = `You are a personal growth mentor specialized in three fou
 2. "The Power of Habit" by Charles Duhigg — focus on the habit loop (cue-routine-reward), keystone habits, and belief in change.
 3. "The Richest Man in Babylon" by George S. Clason — focus on "pay yourself first" (save 10%), live below your means, make your money work for you, and the five laws of gold.
 
-When giving advice, always reference the relevant methodology from these books. Keep responses practical, actionable, and in Portuguese.`
+When giving advice, always reference the relevant methodology from these books. Keep responses practical, actionable, and in Portuguese. When health data is available, also consider the user's calorie and water intake, relating it to habit formation and discipline principles from the books.`
 
 function generateInsight(message: string, context: AIMentorContext): string {
   const msg = message.toLowerCase()
@@ -28,6 +34,25 @@ function generateInsight(message: string, context: AIMentorContext): string {
     .reduce((a, b) => a + b.amount, 0)
   const savingsRate = income > 0 ? Math.round(((income - expense) / income) * 100) : 0
   const activeGoals = context.goals.filter((g) => g.status === 'Em Progresso').length
+  const healthInfo = context.health
+  const waterPct =
+    healthInfo && healthInfo.water_goal_ml > 0
+      ? Math.round((healthInfo.water_intake_ml / healthInfo.water_goal_ml) * 100)
+      : 0
+
+  if (
+    healthInfo &&
+    (msg.includes('água') ||
+      msg.includes('water') ||
+      msg.includes('hidrat') ||
+      msg.includes('caloria') ||
+      msg.includes('calor') ||
+      msg.includes('dieta') ||
+      msg.includes('alimentação') ||
+      msg.includes('saúde'))
+  ) {
+    return `Baseado em "Hábitos Atômicos" e seus dados de saúde:\n\n💧 Água hoje: ${(healthInfo.water_intake_ml / 1000).toFixed(1)}L de ${(healthInfo.water_goal_ml / 1000).toFixed(1)}L (${waterPct}%)\n🔥 Calorias: ${healthInfo.calories_consumed} / ${healthInfo.calorie_goal} kcal\n\n💡 Estratégias dos livros:\n• Empilhamento de Hábitos: "Depois de acordar, bebo um copo de água"\n• Regra dos 2 Minutos: comece com um gole, não o litro todo\n• Projete o ambiente: deixe uma garrafa visível na mesa\n• Identidade: "Eu sou alguém que se cuida"\n• Hábito âncora: hidratação pode catalisar melhores escolhas alimentares\n• "Você não alcança o nível dos seus objetivos, cai no nível dos seus sistemas"\n\n📊 ${waterPct >= 100 ? 'Meta de hidratação concluída! Mantenha o ritmo!' : 'Progresso consistente vence perfeição!'}`
+  }
 
   if (
     msg.includes('poupar') ||
@@ -55,7 +80,8 @@ function generateInsight(message: string, context: AIMentorContext): string {
     return `Com base em "O Poder do Hábito" e seus dados:\n\n📈 Hábitos concluídos hoje: ${completedToday} de ${totalHabits}.\n\n🔑 Hábitos Keystone (Duhigg):\n• Identifique 1 hábito que catalisa outros (ex: exercício)\n• Priorize hábitos matinais — definem o tom do dia\n• Foque em UM novo hábito por vez\n• Use a "cadeia" de hábitos: encadeie comportamentos\n\n⚡ Regra dos 2 Minutos (Clear): comece pela versão mais fácil do hábito.`
   }
 
-  return `Olá! Sou seu mentor de crescimento, especialista em:\n\n📚 "Hábitos Atômicos" (James Clear) — sistemas e identidade\n📚 "O Poder do Hábito" (Charles Duhigg) — loop do hábito e hábitos âncora\n📚 "O Homem Mais Rico da Babilônia" (Clason) — finanças pessoais\n\nSeus dados: ${totalHabits} hábitos, ${activeGoals} objetivos ativos, taxa de poupança de ${savingsRate}%.\n\nPergunte sobre poupança, rotina, hábitos ou objetivos!`
+  const healthStr = healthInfo ? `, ${waterPct}% da meta de água` : ''
+  return `Olá! Sou seu mentor de crescimento, especialista em:\n\n📚 "Hábitos Atômicos" (James Clear) — sistemas e identidade\n📚 "O Poder do Hábito" (Charles Duhigg) — loop do hábito e hábitos âncora\n📚 "O Homem Mais Rico da Babilônia" (Clason) — finanças pessoais\n\nSeus dados: ${totalHabits} hábitos, ${activeGoals} objetivos ativos, taxa de poupança de ${savingsRate}%${healthStr}.\n\nPergunte sobre poupança, rotina, hábitos, saúde ou objetivos!`
 }
 
 async function getOpenAIResponse(
@@ -76,7 +102,10 @@ async function getOpenAIResponse(
   const savingsRate = income > 0 ? Math.round(((income - expense) / income) * 100) : 0
   const activeGoals = context.goals.filter((g) => g.status === 'Em Progresso').length
 
-  const userContext = `Dados do usuário:\n- Hábitos: ${totalHabits} total, ${completedToday} concluídos hoje\n- Renda: R$ ${income}, Despesas: R$ ${expense}, Taxa de poupança: ${savingsRate}%\n- Objetivos ativos: ${activeGoals}\n\nPergunta: ${message}`
+  const healthStr = context.health
+    ? `\n- Água: ${(context.health.water_intake_ml / 1000).toFixed(1)}L / ${(context.health.water_goal_ml / 1000).toFixed(1)}L\n- Calorias: ${context.health.calories_consumed} / ${context.health.calorie_goal} kcal`
+    : ''
+  const userContext = `Dados do usuário:\n- Hábitos: ${totalHabits} total, ${completedToday} concluídos hoje\n- Renda: R$ ${income}, Despesas: R$ ${expense}, Taxa de poupança: ${savingsRate}%\n- Objetivos ativos: ${activeGoals}${healthStr}\n\nPergunta: ${message}`
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',

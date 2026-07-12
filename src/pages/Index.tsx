@@ -5,7 +5,21 @@ import { FinancialGrowthChart } from '@/components/dashboard/FinancialGrowthChar
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import useGoalsStore from '@/stores/useGoalsStore'
-import { CheckCircle2, Circle, Flame, Target, Wallet, TrendingUp, Activity } from 'lucide-react'
+import useHealthStore from '@/stores/useHealthStore'
+import { WaterTrackerCard } from '@/components/dashboard/WaterTrackerCard'
+import { CalorieTrackerCard } from '@/components/dashboard/CalorieTrackerCard'
+import { calculateDailyCalories, calculateWaterGoal } from '@/lib/health-utils'
+import { Link } from 'react-router-dom'
+import {
+  CheckCircle2,
+  Circle,
+  Flame,
+  Target,
+  Wallet,
+  TrendingUp,
+  Activity,
+  ArrowRight,
+} from 'lucide-react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 
@@ -19,6 +33,21 @@ export default function Index() {
   const { habits, toggleHabit } = useHabitsStore()
   const { transactions } = useFinancesStore()
   const { goals } = useGoalsStore()
+  const { healthLog, healthProfile, addWater, addCalories } = useHealthStore()
+
+  const calorieGoal =
+    healthProfile?.weight_kg && healthProfile?.height_cm && healthProfile?.age
+      ? calculateDailyCalories(
+          Number(healthProfile.weight_kg),
+          Number(healthProfile.height_cm),
+          Number(healthProfile.age),
+          (healthProfile.gender as 'male' | 'female') || 'male',
+          (healthProfile.activity_level as any) || 'sedentary',
+        )
+      : 0
+  const waterGoal = healthProfile?.weight_kg
+    ? calculateWaterGoal(Number(healthProfile.weight_kg))
+    : 2000
 
   const pendingHabits = habits.filter((h) => !h.is_completed).slice(0, 3)
   const completedToday = habits.filter((h) => h.is_completed).length
@@ -92,6 +121,31 @@ export default function Index() {
           iconBg="bg-orange-500/10"
         />
       </div>
+
+      {calorieGoal > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CalorieTrackerCard
+            consumed={healthLog?.calories_consumed || 0}
+            goal={calorieGoal}
+            onAdd={addCalories}
+          />
+          <WaterTrackerCard
+            current={healthLog?.water_intake_ml || 0}
+            goal={waterGoal}
+            onAdd={addWater}
+          />
+        </div>
+      ) : (
+        <Link to="/saude">
+          <Card className="glass-card rounded-2xl border-none shadow-soft p-6 flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer">
+            <div>
+              <p className="font-bold text-lg">Configurar Perfil de Saúde</p>
+              <p className="text-sm text-muted-foreground">Calcule suas metas de calorias e água</p>
+            </div>
+            <ArrowRight className="text-primary" />
+          </Card>
+        </Link>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <HabitGrowthChart />

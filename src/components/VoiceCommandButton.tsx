@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast'
 import { processVoiceCommand } from '@/services/voice-command'
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
+import useHealthStore from '@/stores/useHealthStore'
 
 export function VoiceCommandButton() {
   const [isRecording, setIsRecording] = useState(false)
@@ -14,6 +15,7 @@ export function VoiceCommandButton() {
   const { toast } = useToast()
   const { refetchHabits } = useHabitsStore()
   const { refetchTransactions } = useFinancesStore()
+  const { refetchHealth } = useHealthStore()
 
   const startRecording = useCallback(async () => {
     try {
@@ -61,6 +63,8 @@ export function VoiceCommandButton() {
             await refetchHabits()
           } else if (result.action === 'add_expense') {
             await refetchTransactions()
+          } else if (result.action === 'add_water' || result.action === 'add_calories') {
+            await refetchHealth()
           }
         } else {
           toast({
@@ -79,7 +83,7 @@ export function VoiceCommandButton() {
         setIsProcessing(false)
       }
     },
-    [toast, refetchHabits, refetchTransactions],
+    [toast, refetchHabits, refetchTransactions, refetchHealth],
   )
 
   const handleClick = () => {

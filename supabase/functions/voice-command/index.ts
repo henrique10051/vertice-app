@@ -4,15 +4,19 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 const INTENT_SYSTEM_PROMPT = `You are an intent extraction assistant. Analyze the user's voice command in Portuguese and extract the intent. Return ONLY a valid JSON object (no markdown) with this exact schema:
 {
-  "action": "complete_habit" | "add_expense" | "unknown",
+  "action": "complete_habit" | "add_expense" | "add_water" | "add_calories" | "unknown",
   "habit_title": string,
   "amount": number,
-  "category": string
+  "category": string,
+  "water_ml": number,
+  "calories": number
 }
 
 Rules:
 - For "Concluir hábito [nome]" or "Marcar [nome] como feito" -> action="complete_habit", habit_title=[nome]
 - For "Gastei [valor] com [categoria]" or "Despesa de [valor] em [categoria]" -> action="add_expense", amount=[valor], category=[categoria]
+- For "Bebi [valor]ml de água" or "Água [valor]ml" or "Tomei [valor]ml de água" -> action="add_water", water_ml=[valor]
+- For "Consumi [valor] calorias" or "Comi [valor] calorias" or "Calorias [valor]" -> action="add_calories", calories=[valor]
 - Map categories to: Moradia, Alimentação, Transporte, Educação/Crescimento, Renda, Outros
 - Anything else -> action="unknown", all fields empty/zero
 - Extract the habit title as a fuzzy match (partial name is OK)
@@ -112,15 +116,30 @@ Deno.serve(async (req: Request) => {
 
     const intentData = await intentResponse.json()
     const intentText = intentData.choices?.[0]?.message?.content ?? '{}'
-    let intent: { action: string; habit_title: string; amount: number; category: string }
+    let intent: {
+      action: string
+      habit_title: string
+      amount: number
+      category: string
+      water_ml: number
+      calories: number
+    }
 
     try {
       intent = JSON.parse(intentText)
     } catch {
-      intent = { action: 'unknown', habit_title: '', amount: 0, category: '' }
+      intent = {
+        action: 'unknown',
+        habit_title: '',
+        amount: 0,
+        category: '',
+        water_ml: 0,
+        calories: 0,
+      }
     }
 
     const serviceClient = createClient(supabaseUrl, serviceRoleKey)
+    const today = new Date().toISOString().split('T')[0]
 
     if (intent.action === 'complete_habit' && intent.habit_title) {
       const { data: habits } = await serviceClient
@@ -160,7 +179,7 @@ Deno.serve(async (req: Request) => {
         amount: intent.amount,
         category: intent.category || 'Outros',
         description: transcription,
-        date: new Date().toISOString().split('T')[0],
+        date: today,
       })
 
       if (insertError) {
@@ -181,11 +200,71 @@ Deno.serve(async (req: Request) => {
       )
     }
 
+    if (intent.action === 'add_water' && intent.water_ml > 0) {
+      const { data: existing } = await serviceClient
+        .from('health_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .maybeSingle()
+
+      const newWater = (existing?.water_intake_ml || 0) + intent.water_ml
+      await serviceClient.from('health_logs').upsert(
+        {
+          user_id: user.id,
+          date: today,
+          water_intake_ml: newWater,
+          calories_consumed: existing?.calories_consumed || 0,
+        },
+        { onConflict: 'user_id,date' },
+      )
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: 'add_water',
+          message: `${intent.water_ml}ml de água registrados! Total: ${newWater}ml`,
+          transcription,
+        }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+      )
+    }
+
+    if (intent.action === 'add_calories' && intent.calories > 0) {
+      const { data: existing } = await serviceClient
+        .from('health_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .maybeSingle()
+
+      const newCalories = (existing?.calories_consumed || 0) + intent.calories
+      await serviceClient.from('health_logs').upsert(
+        {
+          user_id: user.id,
+          date: today,
+          calories_consumed: newCalories,
+          water_intake_ml: existing?.water_intake_ml || 0,
+        },
+        { onConflict: 'user_id,date' },
+      )
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          action: 'add_calories',
+          message: `${intent.calories} calorias registradas! Total: ${newCalories} kcal`,
+          transcription,
+        }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+      )
+    }
+
     return new Response(
       JSON.stringify({
         success: false,
         message:
-          'Comando não reconhecido. Diga: "Concluir hábito [nome]" ou "Gastei [valor] com [categoria]".',
+          'Comando não reconhecido. Diga: "Concluir hábito [nome]", "Gastei [valor] com [categoria]", "Bebi [valor]ml de água" ou "Consumi [valor] calorias".',
         transcription,
       }),
       { headers: { 'Content-Type': 'application/json', ...corsHeaders } },
