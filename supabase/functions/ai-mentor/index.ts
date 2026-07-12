@@ -13,12 +13,171 @@ interface AIMentorContext {
   }
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+interface ProposedHabit {
+  title: string
+  description: string
+  frequency: string
+}
+
+interface MentorResponse {
+  type: 'question' | 'roadmap'
+  content: string
+  habits?: ProposedHabit[]
+  questionIndex?: number
+}
+
 const SYSTEM_PROMPT = `You are a personal growth mentor specialized in three foundational books:
 1. "Atomic Habits" by James Clear — focus on identity-based habits, the habit loop (cue-craving-response-reward), the Two-Minute Rule, habit stacking, and the 1% improvement principle.
 2. "The Power of Habit" by Charles Duhigg — focus on the habit loop (cue-routine-reward), keystone habits, and belief in change.
 3. "The Richest Man in Babylon" by George S. Clason — focus on "pay yourself first" (save 10%), live below your means, make your money work for you, and the five laws of gold.
 
 When giving advice, always reference the relevant methodology from these books. Keep responses practical, actionable, and in Portuguese. When health data is available, also consider the user's calorie and water intake, relating it to habit formation and discipline principles from the books.`
+
+const FALLBACK_QUESTIONS = [
+  'Olá! Sou seu Mentor de Crescimento Pessoal. Vou conduzir uma breve entrevista para montar um plano personalizado para você. Primeiro: O que você quer estudar ou desenvolver? (ex: programação, idiomas, liderança, finanças)',
+  'Excelente! Quanto tempo você pode dedicar por dia a esses objetivos? (ex: 30 minutos, 1 hora, 2 horas)',
+  'Ótimo! Quais habilidades específicas você quer melhorar? (ex: concentração, disciplina, comunicação, organização financeira)',
+  'Perfeito! Qual é seu maior desafio atual em relação a esses objetivos? (ex: falta de rotina, procrastinação, gestão de tempo)',
+  'Muito útil! Você prefere estudar/praticar de manhã, à tarde ou à noite? Isso me ajuda a sugerir a melhor rotina.',
+]
+
+function generateFallbackRoadmap(answers: string[]): MentorResponse {
+  const combined = answers.join(' ').toLowerCase()
+  const habits: ProposedHabit[] = [
+    {
+      title: 'Estudo Focado (25 min)',
+      description:
+        'Use a técnica Pomodoro: 25 min de estudo focado seguido de 5 min de pausa. Baseado na Regra dos 2 Minutos de James Clear.',
+      frequency: 'daily',
+    },
+  ]
+
+  if (combined.includes('program') || combined.includes('código') || combined.includes('tech')) {
+    habits.push({
+      title: 'Prática de Código (30 min)',
+      description:
+        'Resolva um exercício ou construa um pequeno projeto diariamente. Empilhamento de hábitos: "Depois do café, pratico código".',
+      frequency: 'daily',
+    })
+  }
+
+  if (combined.includes('idiom') || combined.includes('inglês') || combined.includes('english')) {
+    habits.push({
+      title: 'Estudo de Idioma (20 min)',
+      description:
+        'Pratique vocabulário e conversação. "Eu sou alguém que fala outro idioma" — identidade-based habits.',
+      frequency: 'daily',
+    })
+  }
+
+  if (combined.includes('financ') || combined.includes('dinheiro') || combined.includes('econom')) {
+    habits.push({
+      title: 'Revisão Financeira Semanal',
+      description:
+        'Reserve 10% de tudo que ganha (O Homem Mais Rico da Babilônia). Registre gastos e revise investimentos.',
+      frequency: 'weekly',
+    })
+  }
+
+  habits.push({
+    title: 'Planejamento Diário (10 min)',
+    description: 'Liste 3 prioridades do dia. Sistemas > Metas (James Clear).',
+    frequency: 'daily',
+  })
+
+  habits.push({
+    title: 'Caminhada (20 min)',
+    description:
+      'Movimento leve diário. Hábito keystone que melhora foco e disciplina (Charles Duhigg).',
+    frequency: 'daily',
+  })
+
+  habits.push({
+    title: 'Reflexão Noturna (5 min)',
+    description:
+      'Anote 1 vitória do dia e 1 melhoria. Feche o loop: Gatilho → Rotina → Recompensa.',
+    frequency: 'daily',
+  })
+
+  return {
+    type: 'roadmap',
+    content:
+      'Baseado nas suas respostas, criei um plano personalizado inspirado em "Hábitos Atômicos", "O Poder do Hábito" e "O Homem Mais Rico da Babilônia". O plano foca em construir sistemas, usar hábitos âncora e melhorar 1% por dia.',
+    habits,
+  }
+}
+
+function getInterviewResponse(messages: ChatMessage[], questionIndex: number): MentorResponse {
+  const userMessages = messages.filter((m) => m.role === 'user')
+  const currentIndex = questionIndex
+
+  if (currentIndex < FALLBACK_QUESTIONS.length) {
+    return {
+      type: 'question',
+      content: FALLBACK_QUESTIONS[currentIndex],
+      questionIndex: currentIndex + 1,
+    }
+  }
+
+  return generateFallbackRoadmap(userMessages.map((m) => m.content))
+}
+
+async function getOpenAIInterviewResponse(
+  messages: ChatMessage[],
+  questionIndex: number,
+): Promise<MentorResponse | null> {
+  const apiKey = Deno.env.get('OPENAI_API_KEY')
+  if (!apiKey) return null
+
+  const userAnswers = messages.filter((m) => m.role === 'user').map((m) => m.content)
+  const isLastQuestion = questionIndex >= FALLBACK_QUESTIONS.length
+
+  if (isLastQuestion) {
+    const promptMessages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      {
+        role: 'user',
+        content: `O usuário respondeu as seguintes perguntas da entrevista:\n${userAnswers.map((a, i) => `${i + 1}. ${a}`).join('\n')}\n\nCom base nessas respostas, crie um plano de crescimento personalizado. Responda APENAS com JSON válido no formato:\n{"type":"roadmap","content":"resumo do plano","habits":[{"title":"...","description":"...","frequency":"daily|weekly"}]}`,
+      },
+    ]
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: promptMessages,
+        temperature: 0.7,
+        max_tokens: 800,
+      }),
+    })
+
+    if (!response.ok) return null
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content
+    if (!content) return null
+
+    try {
+      const parsed = JSON.parse(content)
+      if (parsed.type === 'roadmap' && Array.isArray(parsed.habits)) {
+        return parsed as MentorResponse
+      }
+    } catch {
+      return null
+    }
+    return null
+  }
+
+  return null
+}
 
 function generateInsight(message: string, context: AIMentorContext): string {
   const msg = message.toLowerCase()
@@ -135,7 +294,23 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { message, context } = (await req.json()) as { message: string; context: AIMentorContext }
+    const body = await req.json()
+
+    if (body.mode === 'interview') {
+      const { messages, questionIndex } = body as {
+        messages: ChatMessage[]
+        questionIndex: number
+      }
+
+      const aiResponse = await getOpenAIInterviewResponse(messages, questionIndex)
+      const response = aiResponse ?? getInterviewResponse(messages, questionIndex)
+
+      return new Response(JSON.stringify(response), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      })
+    }
+
+    const { message, context } = body as { message: string; context: AIMentorContext }
 
     const aiResponse = await getOpenAIResponse(message, context)
     const response = aiResponse ?? generateInsight(message, context)

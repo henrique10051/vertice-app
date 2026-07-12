@@ -1,23 +1,67 @@
-import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { useState, useEffect, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
 import useHabitsStore from '@/stores/useHabitsStore'
-import { getTodayStr, getLastNDays } from '@/lib/date-utils'
-import { CheckCircle2, Circle, Calendar, Trash2 } from 'lucide-react'
+import { getTodayStr, addDays, formatDateLongPT, dateToStr, strToDate } from '@/lib/date-utils'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AddCard } from '@/components/AddCard'
 import { HabitAddDialog } from '@/components/HabitAddDialog'
-
-const freqLabel: Record<string, string> = {
-  daily: 'Diária',
-  weekly: 'Semanal',
-  monthly: 'Mensal',
-}
+import { HabitProgressChart } from '@/components/HabitProgressChart'
+import { HabitCard } from '@/components/HabitCard'
+import { ptBR } from 'date-fns/locale'
 
 export default function Habits() {
-  const { habits, toggleHabit, deleteHabit } = useHabitsStore()
-  const days = getLastNDays(7)
+  const {
+    habits,
+    toggleHabitForDate,
+    deleteHabit,
+    habitLogsByDate,
+    fetchHabitLogsForDate,
+    fetchHabitLogsRange,
+  } = useHabitsStore()
   const today = getTodayStr()
+  const [selectedDate, setSelectedDate] = useState(today)
   const [addOpen, setAddOpen] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+
+  const days = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(selectedDate, -(6 - i))),
+    [selectedDate],
+  )
+  const selectedDateObj = useMemo(() => strToDate(selectedDate), [selectedDate])
+
+  useEffect(() => {
+    fetchHabitLogsForDate(selectedDate)
+  }, [selectedDate, fetchHabitLogsForDate])
+
+  useEffect(() => {
+    fetchHabitLogsRange(days[0], days[days.length - 1])
+  }, [habits.length, fetchHabitLogsRange, days])
+
+  const completedIds = habitLogsByDate[selectedDate] || []
+
+  const chartData = useMemo(() => {
+    return days.map((date) => {
+      const count = habitLogsByDate[date]?.length || 0
+      const dayName = strToDate(date)
+        .toLocaleDateString('pt-BR', { weekday: 'short' })
+        .replace('.', '')
+      return { day: dayName, count, date }
+    })
+  }, [days, habitLogsByDate])
+
+  const consistencyByHabit = useMemo(() => {
+    const map: Record<string, { completedDays: number; totalDays: number }> = {}
+    habits.forEach((habit) => {
+      const completedDays = days.filter((date) =>
+        (habitLogsByDate[date] || []).includes(habit.id),
+      ).length
+      map[habit.id] = { completedDays, totalDays: days.length }
+    })
+    return map
+  }, [habits, days, habitLogsByDate])
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -28,27 +72,91 @@ export default function Habits() {
         </p>
       </div>
 
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSelectedDate(addDays(selectedDate, -1))}
+            className="rounded-xl"
+          >
+            <ChevronLeft size={18} />
+          </Button>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="rounded-xl min-w-[200px] capitalize">
+                {formatDateLongPT(selectedDate)}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDateObj}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(dateToStr(date))
+                    setCalendarOpen(false)
+                  }
+                }}
+                locale={ptBR}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+            className="rounded-xl"
+          >
+            <ChevronRight size={18} />
+          </Button>
+        </div>
+        {selectedDate !== today && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedDate(today)}
+            className="text-primary"
+          >
+            Voltar para hoje
+          </Button>
+        )}
+      </div>
+
+      <HabitProgressChart data={chartData} maxHabits={habits.length} />
+
       <div className="overflow-x-auto pb-4 hide-scrollbar">
-        <div className="flex gap-4 min-w-max">
+        <div className="flex gap-3 min-w-max">
           {days.map((date) => {
+            const isSelected = date === selectedDate
             const isToday = date === today
-            const dayName = new Date(date)
+            const dayName = strToDate(date)
               .toLocaleDateString('pt-BR', { weekday: 'short' })
               .replace('.', '')
             const dayNum = date.split('-')[2]
+            const completedCount = habitLogsByDate[date]?.length || 0
             return (
-              <div
+              <button
                 key={date}
+                onClick={() => setSelectedDate(date)}
                 className={cn(
-                  'flex flex-col items-center justify-center w-16 h-20 rounded-2xl transition-colors',
-                  isToday
-                    ? 'bg-primary text-primary-foreground shadow-elevation'
-                    : 'bg-white dark:bg-slate-900 border border-border/50 text-muted-foreground',
+                  'flex flex-col items-center justify-center w-16 h-20 rounded-2xl transition-all duration-200',
+                  isSelected
+                    ? 'bg-primary text-primary-foreground shadow-elevation scale-105'
+                    : isToday
+                      ? 'bg-primary/10 text-primary border border-primary/30'
+                      : 'bg-white dark:bg-slate-900 border border-border/50 text-muted-foreground hover:border-primary/30',
                 )}
               >
                 <span className="text-xs font-medium uppercase">{dayName}</span>
                 <span className="text-xl font-bold">{dayNum}</span>
-              </div>
+                {completedCount > 0 && (
+                  <span className="text-[10px] mt-0.5">
+                    {completedCount}/{habits.length}
+                  </span>
+                )}
+              </button>
             )
           })}
         </div>
@@ -56,51 +164,18 @@ export default function Habits() {
 
       <div className="grid gap-4">
         {habits.map((habit) => {
-          const isDoneToday = habit.is_completed
+          const isDone = completedIds.includes(habit.id)
+          const consistency = consistencyByHabit[habit.id] || { completedDays: 0, totalDays: 7 }
           return (
-            <Card
+            <HabitCard
               key={habit.id}
-              className="glass-card border-none rounded-2xl overflow-hidden group"
-            >
-              <CardContent className="p-0 flex items-center justify-between">
-                <div className="p-6 flex-1 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl">
-                    {isDoneToday ? '✅' : '🌟'}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg">{habit.title}</h3>
-                    {habit.description && (
-                      <p className="text-sm text-muted-foreground mt-0.5">{habit.description}</p>
-                    )}
-                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground font-medium flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={14} />
-                        {freqLabel[habit.frequency] || 'Diária'}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => deleteHabit(habit.id)}
-                    className="p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-                <button
-                  onClick={() => toggleHabit(habit.id)}
-                  className="px-8 h-full flex items-center justify-center transition-all duration-300 border-l border-border/50 hover:bg-muted/30"
-                >
-                  {isDoneToday ? (
-                    <CheckCircle2 size={36} className="text-primary animate-check-pop" />
-                  ) : (
-                    <Circle
-                      size={36}
-                      className="text-muted-foreground group-hover:text-primary transition-colors"
-                    />
-                  )}
-                </button>
-              </CardContent>
-            </Card>
+              habit={habit}
+              isDone={isDone}
+              completedDays={consistency.completedDays}
+              totalDays={consistency.totalDays}
+              onToggle={() => toggleHabitForDate(habit.id, selectedDate)}
+              onDelete={() => deleteHabit(habit.id)}
+            />
           )
         })}
         <AddCard onClick={() => setAddOpen(true)} className="min-h-[88px]" />

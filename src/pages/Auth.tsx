@@ -4,18 +4,22 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2, MailCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function Auth() {
   const navigate = useNavigate()
-  const { user, signIn, signUp, loading } = useAuth()
+  const { user, signIn, signUp, resendConfirmation, loading } = useAuth()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [signupSuccess, setSignupSuccess] = useState(false)
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
 
   useEffect(() => {
     if (user) navigate('/')
@@ -24,13 +28,29 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSignupSuccess(false)
+    setEmailNotConfirmed(false)
+    setResendSuccess(false)
     setSubmitting(true)
     if (mode === 'signup') {
       const { error } = await signUp(email, password, fullName)
-      if (error) setError(error.message)
+      if (error) {
+        setError(error.message)
+      } else {
+        setSignupSuccess(true)
+      }
     } else {
       const { error } = await signIn(email, password)
-      if (error) setError(error.message)
+      if (error) {
+        if (error.message.toLowerCase().includes('email not confirmed')) {
+          setEmailNotConfirmed(true)
+          setError(
+            'Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou clique abaixo para reenviar o email de confirmação.',
+          )
+        } else {
+          setError(error.message)
+        }
+      }
     }
     setSubmitting(false)
   }
@@ -117,6 +137,51 @@ export default function Auth() {
               <p className="text-sm text-rose-500 bg-rose-500/10 rounded-lg p-3">{error}</p>
             )}
 
+            {emailNotConfirmed && mode === 'login' && (
+              <div className="space-y-2">
+                {resendSuccess ? (
+                  <p className="text-sm text-emerald-600 bg-emerald-500/10 rounded-lg p-3 flex items-center gap-2">
+                    <MailCheck size={18} className="shrink-0" /> Email de confirmação reenviado!
+                    Verifique sua caixa de entrada.
+                  </p>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={resending}
+                    onClick={async () => {
+                      setResending(true)
+                      setResendSuccess(false)
+                      const { error } = await resendConfirmation(email)
+                      if (!error) {
+                        setResendSuccess(true)
+                      } else {
+                        setError(error.message)
+                      }
+                      setResending(false)
+                    }}
+                  >
+                    {resending ? (
+                      <Loader2 className="animate-spin" size={18} />
+                    ) : (
+                      'Reenviar Email de Confirmação'
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {signupSuccess && (
+              <div className="flex items-start gap-2 text-sm text-emerald-600 bg-emerald-500/10 rounded-lg p-3">
+                <MailCheck size={18} className="shrink-0 mt-0.5" />
+                <span>
+                  Conta criada! Verifique seu email para confirmar o cadastro, ou faça login se a
+                  confirmação não for necessária.
+                </span>
+              </div>
+            )}
+
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? (
                 <Loader2 className="animate-spin" size={18} />
@@ -132,6 +197,19 @@ export default function Auth() {
             <p className="text-xs text-muted-foreground text-center mt-4">
               Demo: hlima10051@gmail.com / Skip@Pass
             </p>
+          )}
+
+          {signupSuccess && (
+            <Button
+              variant="outline"
+              className="w-full mt-3"
+              onClick={() => {
+                setMode('login')
+                setSignupSuccess(false)
+              }}
+            >
+              Ir para o login
+            </Button>
           )}
         </div>
       </div>
