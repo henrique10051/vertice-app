@@ -26,7 +26,7 @@ export function Header() {
           <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary text-primary-foreground">
             <Sparkles size={16} />
           </span>
-          Lumi
+          Vértice
         </h1>
         <h2 className="text-xl font-semibold hidden md:block text-foreground">Visão Geral</h2>
       </div>

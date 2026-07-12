@@ -4,6 +4,7 @@ export type Profile = {
   id: string
   full_name: string
   avatar_url: string
+  onboarding_completed: boolean
   updated_at: string
 }
 
@@ -14,7 +15,7 @@ export async function getProfile(userId: string) {
 
 export async function updateProfile(
   userId: string,
-  updates: { full_name?: string; avatar_url?: string },
+  updates: { full_name?: string; avatar_url?: string; onboarding_completed?: boolean },
 ) {
   const { data, error } = await supabase
     .from('profiles')

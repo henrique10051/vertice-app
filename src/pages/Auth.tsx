@@ -50,7 +50,7 @@ export default function Auth() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
             <Sparkles size={32} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Lumi</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Vértice</h1>
           <p className="text-muted-foreground mt-1">Seu sistema de crescimento pessoal</p>
         </div>
 

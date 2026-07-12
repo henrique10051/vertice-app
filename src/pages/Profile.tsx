@@ -82,7 +82,7 @@ export default function ProfilePage() {
               <AvatarFallback>{fullName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-lg">{fullName || 'Usuário Lumi'}</p>
+              <p className="font-semibold text-lg">{fullName || 'Usuário Vértice'}</p>
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <Mail size={14} />
                 {user?.email}

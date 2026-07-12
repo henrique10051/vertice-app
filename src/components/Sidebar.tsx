@@ -4,6 +4,7 @@ import {
   ListChecks,
   Target,
   Wallet,
+  CreditCard,
   User,
   Bot,
   PanelLeftClose,
@@ -18,6 +19,7 @@ const navItems = [
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
   { path: '/objetivos', label: 'Objetivos', icon: Target },
   { path: '/financas', label: 'Finanças', icon: Wallet },
+  { path: '/planos', label: 'Planos', icon: CreditCard },
   { path: '/mentor', label: 'Mentor IA', icon: Bot },
   { path: '/perfil', label: 'Perfil', icon: User },
 ]
@@ -39,7 +41,7 @@ export function Sidebar() {
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
               <Sparkles size={18} />
             </span>
-            Lumi
+            Vértice
           </span>
         )}
         {sidebarCollapsed && (

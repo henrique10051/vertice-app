@@ -14,8 +14,11 @@ import Auth from '@/pages/Auth'
 import NotFound from '@/pages/NotFound'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 import { DataProvider } from '@/providers/data-provider'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import Plans from '@/pages/Plans'
+import Onboarding from '@/pages/Onboarding'
+import { getProfile, type Profile as ProfileData } from '@/services/profiles'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -32,6 +35,37 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+function RequireOnboarding({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  const [profile, setProfile] = useState<ProfileData | null>(null)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    if (!user) {
+      setChecking(false)
+      return
+    }
+    getProfile(user.id).then(({ data }) => {
+      setProfile(data)
+      setChecking(false)
+    })
+  }, [user])
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    )
+  }
+
+  if (!profile?.onboarding_completed) {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  return <>{children}</>
+}
+
 const App = () => (
   <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false}>
     <AuthProvider>
@@ -43,9 +77,19 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route
+                path="/onboarding"
                 element={
                   <ProtectedRoute>
-                    <Layout />
+                    <Onboarding />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <RequireOnboarding>
+                      <Layout />
+                    </RequireOnboarding>
                   </ProtectedRoute>
                 }
               >
@@ -53,6 +97,7 @@ const App = () => (
                 <Route path="/habitos" element={<Habits />} />
                 <Route path="/objetivos" element={<Goals />} />
                 <Route path="/financas" element={<Finances />} />
+                <Route path="/planos" element={<Plans />} />
                 <Route path="/mentor" element={<Mentor />} />
                 <Route path="/perfil" element={<Profile />} />
               </Route>
