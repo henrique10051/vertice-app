@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { Header } from './Header'
 import { AIMentorChat } from './AIMentorChat'
+import { VoiceCommandButton } from './VoiceCommandButton'
 import useMainStore from '@/stores/main'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +26,7 @@ export default function Layout() {
       </div>
       <BottomNav />
       <AIMentorChat />
+      <VoiceCommandButton />
     </div>
   )
 }

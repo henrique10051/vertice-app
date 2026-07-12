@@ -1,5 +1,6 @@
 {
   "_versions": {
-    "ai-mentor": 1
+    "ai-mentor": 2,
+    "voice-command": 1
   }
 }
