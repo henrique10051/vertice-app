@@ -11,6 +11,8 @@ export type Profile = {
   age: number | null
   gender: string | null
   activity_level: string | null
+  phone_number: string | null
+  is_premium: boolean
 }
 
 export async function getProfile(userId: string) {
@@ -29,6 +31,7 @@ export async function updateProfile(
     age?: number | null
     gender?: string | null
     activity_level?: string | null
+    phone_number?: string | null
   },
 ) {
   const { data, error } = await supabase

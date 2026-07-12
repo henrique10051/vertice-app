@@ -71,6 +71,74 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          current_quantity: number | null
+          id: string
+          is_on_shopping_list: boolean | null
+          min_quantity: number | null
+          name: string
+          unit: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          current_quantity?: number | null
+          id?: string
+          is_on_shopping_list?: boolean | null
+          min_quantity?: number | null
+          name: string
+          unit?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          current_quantity?: number | null
+          id?: string
+          is_on_shopping_list?: boolean | null
+          min_quantity?: number | null
+          name?: string
+          unit?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pomodoro_logs: {
+        Row: {
+          completed_at: string | null
+          duration_minutes: number
+          habit_id: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          duration_minutes: number
+          habit_id?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          duration_minutes?: number
+          habit_id?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pomodoro_logs_habit_id_fkey'
+            columns: ['habit_id']
+            isOneToOne: false
+            referencedRelation: 'habits'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

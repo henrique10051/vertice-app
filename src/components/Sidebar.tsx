@@ -10,6 +10,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  ShoppingCart,
+  Timer,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useMainStore from '@/stores/main'
@@ -19,6 +21,8 @@ const navItems = [
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
   { path: '/objetivos', label: 'Objetivos', icon: Target },
   { path: '/financas', label: 'Finanças', icon: Wallet },
+  { path: '/mercado', label: 'Mercado', icon: ShoppingCart },
+  { path: '/pomodoro', label: 'Pomodoro', icon: Timer },
   { path: '/planos', label: 'Planos', icon: CreditCard },
   { path: '/mentor', label: 'Mentor IA', icon: Bot },
   { path: '/perfil', label: 'Perfil', icon: User },

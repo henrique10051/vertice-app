@@ -20,6 +20,9 @@ import { Loader2 } from 'lucide-react'
 import Plans from '@/pages/Plans'
 import Onboarding from '@/pages/Onboarding'
 import Health from '@/pages/Health'
+import Mercado from '@/pages/Mercado'
+import Pomodoro from '@/pages/Pomodoro'
+import { InventoryProvider } from '@/hooks/use-inventory'
 import { getProfile, type Profile as ProfileData } from '@/services/profiles'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -73,42 +76,46 @@ const App = () => (
     <AuthProvider>
       <DataProvider>
         <HealthProvider>
-          <BrowserRouter>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route
-                  path="/onboarding"
-                  element={
-                    <ProtectedRoute>
-                      <Onboarding />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <RequireOnboarding>
-                        <Layout />
-                      </RequireOnboarding>
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route path="/" element={<Index />} />
-                  <Route path="/habitos" element={<Habits />} />
-                  <Route path="/objetivos" element={<Goals />} />
-                  <Route path="/financas" element={<Finances />} />
-                  <Route path="/planos" element={<Plans />} />
-                  <Route path="/saude" element={<Health />} />
-                  <Route path="/mentor" element={<Mentor />} />
-                  <Route path="/perfil" element={<Profile />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </TooltipProvider>
-          </BrowserRouter>
+          <InventoryProvider>
+            <BrowserRouter>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route
+                    path="/onboarding"
+                    element={
+                      <ProtectedRoute>
+                        <Onboarding />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    element={
+                      <ProtectedRoute>
+                        <RequireOnboarding>
+                          <Layout />
+                        </RequireOnboarding>
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route path="/" element={<Index />} />
+                    <Route path="/habitos" element={<Habits />} />
+                    <Route path="/objetivos" element={<Goals />} />
+                    <Route path="/financas" element={<Finances />} />
+                    <Route path="/mercado" element={<Mercado />} />
+                    <Route path="/pomodoro" element={<Pomodoro />} />
+                    <Route path="/planos" element={<Plans />} />
+                    <Route path="/saude" element={<Health />} />
+                    <Route path="/mentor" element={<Mentor />} />
+                    <Route path="/perfil" element={<Profile />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </TooltipProvider>
+            </BrowserRouter>
+          </InventoryProvider>
         </HealthProvider>
       </DataProvider>{' '}
     </AuthProvider>

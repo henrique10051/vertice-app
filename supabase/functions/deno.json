@@ -1,8 +1,9 @@
 {
   "_versions": {
     "food-analysis": 1,
-    "voice-command": 1,
+    "voice-command": 2,
     "mentor-chat": 1,
-    "ai-mentor": 4
+    "ai-mentor": 5,
+    "whatsapp-webhook": 1
   }
 }
