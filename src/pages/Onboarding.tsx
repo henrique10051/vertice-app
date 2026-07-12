@@ -8,6 +8,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
@@ -16,8 +23,15 @@ import {
   ListChecks,
   Target,
   Check,
+  Heart,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  calculateDailyCalories,
+  ACTIVITY_LEVELS,
+  type Gender,
+  type ActivityLevel,
+} from '@/lib/health-utils'
 
 const goals = [
   { id: 'financial', label: 'Controle Financeiro', desc: 'Organize suas finanças.', icon: Wallet },
@@ -38,36 +52,64 @@ export default function Onboarding() {
   const [fullName, setFullName] = useState('')
   const [selectedPlan, setSelectedPlan] = useState('free')
   const [submitting, setSubmitting] = useState(false)
+  const [weight, setWeight] = useState('')
+  const [height, setHeight] = useState('')
+  const [age, setAge] = useState('')
+  const [gender, setGender] = useState<Gender>('male')
+  const [activity, setActivity] = useState<ActivityLevel>('sedentary')
 
   useEffect(() => {
     if (!user) return
     getProfile(user.id).then(({ data }) => {
       if (data?.full_name) setFullName(data.full_name)
+      if (data?.weight_kg) setWeight(String(data.weight_kg))
+      if (data?.height_cm) setHeight(String(data.height_cm))
+      if (data?.age) setAge(String(data.age))
+      if (data?.gender) setGender(data.gender as Gender)
+      if (data?.activity_level) setActivity(data.activity_level as ActivityLevel)
     })
   }, [user])
+
+  const caloriePreview =
+    weight && height && age
+      ? calculateDailyCalories(Number(weight), Number(height), Number(age), gender, activity)
+      : 0
 
   const handleFinish = async () => {
     if (!user) return
     setSubmitting(true)
-    await updateProfile(user.id, { full_name: fullName, onboarding_completed: true })
+    await updateProfile(user.id, {
+      full_name: fullName,
+      onboarding_completed: true,
+      weight_kg: weight ? Number(weight) : null,
+      height_cm: height ? Number(height) : null,
+      age: age ? Number(age) : null,
+      gender,
+      activity_level: activity,
+    })
     await upsertSubscription(user.id, selectedPlan)
     setSubmitting(false)
     navigate('/')
   }
 
+  const totalSteps = 5
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-slate-50 to-indigo-50 dark:from-primary/10 dark:via-slate-950 dark:to-indigo-950 p-4">
       <div className="w-full max-w-2xl">
         <div className="flex items-center justify-center gap-2 mb-8">
-          {[1, 2, 3, 4].map((s) => (
-            <div
-              key={s}
-              className={cn(
-                'h-2 rounded-full transition-all duration-300',
-                s === step ? 'w-8 bg-primary' : s < step ? 'w-2 bg-primary' : 'w-2 bg-muted',
-              )}
-            />
-          ))}
+          {Array.from({ length: totalSteps }).map((_, i) => {
+            const s = i + 1
+            return (
+              <div
+                key={s}
+                className={cn(
+                  'h-2 rounded-full transition-all duration-300',
+                  s === step ? 'w-8 bg-primary' : s < step ? 'w-2 bg-primary' : 'w-2 bg-muted',
+                )}
+              />
+            )
+          })}
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-8 border border-border/50">
           {step === 1 && (
@@ -150,6 +192,91 @@ export default function Onboarding() {
           )}
           {step === 4 && (
             <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Heart className="text-primary" size={24} />
+                <h2 className="text-xl font-bold">Dados de Saúde</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Usamos esses dados para calcular suas metas personalizadas de calorias e água.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Peso (kg)</Label>
+                  <Input
+                    type="number"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    placeholder="70"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Altura (cm)</Label>
+                  <Input
+                    type="number"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    placeholder="170"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Idade</Label>
+                  <Input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Gênero</Label>
+                  <Select value={gender} onValueChange={(v) => setGender(v as Gender)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Masculino</SelectItem>
+                      <SelectItem value="female">Feminino</SelectItem>
+                      <SelectItem value="other">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Nível de Atividade</Label>
+                <Select value={activity} onValueChange={(v) => setActivity(v as ActivityLevel)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_LEVELS.map((a) => (
+                      <SelectItem key={a.value} value={a.value}>
+                        {a.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {caloriePreview > 0 && (
+                <div className="bg-primary/10 text-primary p-4 rounded-xl text-sm">
+                  Sua meta calórica diária estimada: <strong>{caloriePreview} kcal</strong>
+                </div>
+              )}
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" onClick={() => setStep(3)} className="gap-2">
+                  <ArrowLeft size={18} /> Voltar
+                </Button>
+                <Button
+                  onClick={() => setStep(5)}
+                  disabled={!weight || !height || !age}
+                  className="gap-2 flex-1"
+                >
+                  Continuar <ArrowRight size={18} />
+                </Button>
+              </div>
+            </div>
+          )}
+          {step === 5 && (
+            <div className="space-y-4">
               <h2 className="text-xl font-bold">Escolha seu plano</h2>
               <p className="text-sm text-muted-foreground">Você pode alterar a qualquer momento.</p>
               <div className="space-y-3">
@@ -176,7 +303,7 @@ export default function Onboarding() {
                 ))}
               </div>
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" onClick={() => setStep(3)} className="gap-2">
+                <Button variant="outline" onClick={() => setStep(4)} className="gap-2">
                   <ArrowLeft size={18} /> Voltar
                 </Button>
                 <Button onClick={handleFinish} disabled={submitting} className="gap-2 flex-1">

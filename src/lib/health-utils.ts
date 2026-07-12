@@ -1,4 +1,4 @@
-export type Gender = 'male' | 'female'
+export type Gender = 'male' | 'female' | 'other'
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very' | 'extra'
 
 export const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; multiplier: number }[] = [
@@ -16,7 +16,9 @@ export function calculateBMR(
   gender: Gender,
 ): number {
   const base = 10 * weightKg + 6.25 * heightCm - 5 * age
-  return gender === 'male' ? base + 5 : base - 161
+  if (gender === 'male') return base + 5
+  if (gender === 'female') return base - 161
+  return base - 78
 }
 
 export function calculateDailyCalories(

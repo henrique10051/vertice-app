@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { WaterTrackerCard } from '@/components/dashboard/WaterTrackerCard'
 import { CalorieTrackerCard } from '@/components/dashboard/CalorieTrackerCard'
+import { FoodLoggerCard } from '@/components/dashboard/FoodLoggerCard'
 import { ArrowLeft, Save, Activity } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -133,6 +134,7 @@ export default function HealthPage() {
                   <SelectContent>
                     <SelectItem value="male">Masculino</SelectItem>
                     <SelectItem value="female">Feminino</SelectItem>
+                    <SelectItem value="other">Outro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -165,7 +167,7 @@ export default function HealthPage() {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <CalorieTrackerCard
               consumed={healthLog?.calories_consumed || 0}
               goal={calorieGoal}
@@ -176,6 +178,7 @@ export default function HealthPage() {
               goal={waterGoal}
               onAdd={addWater}
             />
+            <FoodLoggerCard onAddCalories={addCalories} />
           </div>
           <Card className="glass-card rounded-2xl border-none shadow-soft">
             <CardContent className="p-4 flex items-center justify-between">

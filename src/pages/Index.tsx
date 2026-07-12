@@ -8,7 +8,8 @@ import useGoalsStore from '@/stores/useGoalsStore'
 import useHealthStore from '@/stores/useHealthStore'
 import { WaterTrackerCard } from '@/components/dashboard/WaterTrackerCard'
 import { CalorieTrackerCard } from '@/components/dashboard/CalorieTrackerCard'
-import { calculateDailyCalories, calculateWaterGoal } from '@/lib/health-utils'
+import { FoodLoggerCard } from '@/components/dashboard/FoodLoggerCard'
+import { calculateDailyCalories, calculateWaterGoal, type Gender } from '@/lib/health-utils'
 import { Link } from 'react-router-dom'
 import {
   CheckCircle2,
@@ -41,7 +42,7 @@ export default function Index() {
           Number(healthProfile.weight_kg),
           Number(healthProfile.height_cm),
           Number(healthProfile.age),
-          (healthProfile.gender as 'male' | 'female') || 'male',
+          (healthProfile.gender as Gender) || 'male',
           (healthProfile.activity_level as any) || 'sedentary',
         )
       : 0
@@ -123,7 +124,7 @@ export default function Index() {
       </div>
 
       {calorieGoal > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <CalorieTrackerCard
             consumed={healthLog?.calories_consumed || 0}
             goal={calorieGoal}
@@ -134,6 +135,7 @@ export default function Index() {
             goal={waterGoal}
             onAdd={addWater}
           />
+          <FoodLoggerCard onAddCalories={addCalories} />
         </div>
       ) : (
         <Link to="/saude">

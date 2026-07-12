@@ -47,27 +47,80 @@ export type Database = {
           },
         ]
       }
+      health_logs: {
+        Row: {
+          calories_consumed: number | null
+          created_at: string | null
+          date: string
+          id: string
+          updated_at: string | null
+          user_id: string
+          water_intake_ml: number | null
+        }
+        Insert: {
+          calories_consumed?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          water_intake_ml?: number | null
+        }
+        Update: {
+          calories_consumed?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          water_intake_ml?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'health_logs_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profiles: {
         Row: {
+          activity_level: string | null
+          age: number | null
           avatar_url: string | null
           full_name: string | null
+          gender: string | null
+          height_cm: number | null
           id: string
           onboarding_completed: boolean | null
           updated_at: string | null
+          weight_kg: number | null
         }
         Insert: {
+          activity_level?: string | null
+          age?: number | null
           avatar_url?: string | null
           full_name?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id: string
           onboarding_completed?: boolean | null
           updated_at?: string | null
+          weight_kg?: number | null
         }
         Update: {
+          activity_level?: string | null
+          age?: number | null
           avatar_url?: string | null
           full_name?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id?: string
           onboarding_completed?: boolean | null
           updated_at?: string | null
+          weight_kg?: number | null
         }
         Relationships: []
       }

@@ -1,6 +1,7 @@
 {
   "_versions": {
-    "ai-mentor": 3,
-    "voice-command": 2
+    "ai-mentor": 4,
+    "voice-command": 3,
+    "food-analysis": 1
   }
 }
