@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -132,6 +132,14 @@ export default function Auth() {
                 required
               />
             </div>
+
+            {mode === 'login' && (
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                  Esqueceu a senha?
+                </Link>
+              </div>
+            )}
 
             {error && (
               <p className="text-sm text-rose-500 bg-rose-500/10 rounded-lg p-3">{error}</p>

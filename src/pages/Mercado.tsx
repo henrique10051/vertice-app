@@ -6,6 +6,7 @@ import { InventoryItemCard } from '@/components/InventoryItemCard'
 import { InventoryAddDialog } from '@/components/InventoryAddDialog'
 import { useInventory } from '@/hooks/use-inventory'
 import { Plus, ArrowLeft, ShoppingCart, Package, AlertTriangle, MessageCircle } from 'lucide-react'
+import { InventoryTodoList } from '@/components/InventoryTodoList'
 
 export default function Mercado() {
   const { items, loading, updateItem, removeItem } = useInventory()
@@ -83,6 +84,8 @@ export default function Mercado() {
           </CardContent>
         </Card>
       )}
+
+      <InventoryTodoList />
 
       <div className="flex gap-2">
         <Button

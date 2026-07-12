@@ -23,7 +23,13 @@ import Health from '@/pages/Health'
 import Mercado from '@/pages/Mercado'
 import Pomodoro from '@/pages/Pomodoro'
 import { InventoryProvider } from '@/hooks/use-inventory'
+import { AgendaProvider } from '@/hooks/use-agenda'
+import { NotificationProvider } from '@/hooks/use-notifications'
+import { NotificationGenerator } from '@/components/NotificationGenerator'
 import { getProfile, type Profile as ProfileData } from '@/services/profiles'
+import ForgotPassword from '@/pages/ForgotPassword'
+import UpdatePassword from '@/pages/UpdatePassword'
+import AgendaPage from '@/pages/Agenda'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -77,47 +83,55 @@ const App = () => (
       <DataProvider>
         <HealthProvider>
           <InventoryProvider>
-            <BrowserRouter>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                  <Route path="/auth" element={<Auth />} />
-                  <Route
-                    path="/onboarding"
-                    element={
-                      <ProtectedRoute>
-                        <Onboarding />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    element={
-                      <ProtectedRoute>
-                        <RequireOnboarding>
-                          <Layout />
-                        </RequireOnboarding>
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route path="/" element={<Index />} />
-                    <Route path="/habitos" element={<Habits />} />
-                    <Route path="/objetivos" element={<Goals />} />
-                    <Route path="/financas" element={<Finances />} />
-                    <Route path="/mercado" element={<Mercado />} />
-                    <Route path="/pomodoro" element={<Pomodoro />} />
-                    <Route path="/planos" element={<Plans />} />
-                    <Route path="/saude" element={<Health />} />
-                    <Route path="/mentor" element={<Mentor />} />
-                    <Route path="/perfil" element={<Profile />} />
-                  </Route>
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </TooltipProvider>
-            </BrowserRouter>
-          </InventoryProvider>
+            <AgendaProvider>
+              <NotificationProvider>
+                <NotificationGenerator />
+                <BrowserRouter>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <Routes>
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/update-password" element={<UpdatePassword />} />
+                      <Route
+                        path="/onboarding"
+                        element={
+                          <ProtectedRoute>
+                            <Onboarding />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        element={
+                          <ProtectedRoute>
+                            <RequireOnboarding>
+                              <Layout />
+                            </RequireOnboarding>
+                          </ProtectedRoute>
+                        }
+                      >
+                        <Route path="/" element={<Index />} />
+                        <Route path="/habitos" element={<Habits />} />
+                        <Route path="/objetivos" element={<Goals />} />
+                        <Route path="/financas" element={<Finances />} />
+                        <Route path="/mercado" element={<Mercado />} />
+                        <Route path="/pomodoro" element={<Pomodoro />} />
+                        <Route path="/planos" element={<Plans />} />
+                        <Route path="/agenda" element={<AgendaPage />} />
+                        <Route path="/saude" element={<Health />} />
+                        <Route path="/mentor" element={<Mentor />} />
+                        <Route path="/perfil" element={<Profile />} />
+                      </Route>
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </TooltipProvider>
+                </BrowserRouter>
+              </NotificationProvider>
+            </AgendaProvider>
+          </InventoryProvider>{' '}
         </HealthProvider>
-      </DataProvider>{' '}
+      </DataProvider>
     </AuthProvider>
   </NextThemesProvider>
 )

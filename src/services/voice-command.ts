@@ -22,6 +22,7 @@ export async function processVoiceCommand(audioBlob: Blob): Promise<VoiceCommand
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     },
     body: formData,
   })

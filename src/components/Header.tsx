@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, Plus, Sparkles, User, LogOut } from 'lucide-react'
+import { Plus, Sparkles, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { QuickAddModal } from './QuickAddModal'
 import { ThemeToggle } from './ThemeToggle'
+import { NotificationBell } from './NotificationBell'
 import { useAuth } from '@/hooks/use-auth'
 
 export function Header() {
@@ -33,14 +34,7 @@ export function Header() {
 
       <div className="flex items-center gap-2 md:gap-4">
         <ThemeToggle />
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full shadow-sm hover:shadow-md transition-shadow relative"
-        >
-          <Bell size={20} className="text-muted-foreground" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full"></span>
-        </Button>
+        <NotificationBell />
         <Button
           onClick={() => setModalOpen(true)}
           className="rounded-full gap-2 shadow-soft hover:shadow-elevation transition-all group px-4"

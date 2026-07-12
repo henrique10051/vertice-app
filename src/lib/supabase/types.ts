@@ -9,6 +9,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_tasks: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          due_date: string
+          id: string
+          status: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          status?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          status?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       habit_logs: {
         Row: {
           completed_at: string | null
@@ -107,6 +137,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       pomodoro_logs: {
         Row: {
           completed_at: string | null
@@ -144,21 +204,36 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          is_premium: boolean | null
           onboarding_completed: boolean
+          phone_number: string | null
+          pomodoro_focus_duration: number
+          pomodoro_long_break: number
+          pomodoro_short_break: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           full_name?: string
           id: string
+          is_premium?: boolean | null
           onboarding_completed?: boolean
+          phone_number?: string | null
+          pomodoro_focus_duration?: number
+          pomodoro_long_break?: number
+          pomodoro_short_break?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           full_name?: string
           id?: string
+          is_premium?: boolean | null
           onboarding_completed?: boolean
+          phone_number?: string | null
+          pomodoro_focus_duration?: number
+          pomodoro_long_break?: number
+          pomodoro_short_break?: number
           updated_at?: string
         }
         Relationships: []

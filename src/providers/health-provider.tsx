@@ -58,7 +58,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('weight_kg, height_cm, age, gender, activity_level')
         .eq('id', user.id)
-        .single(),
+        .maybeSingle(),
     ])
 
     setHealthLog(logResult.data as HealthLog | null)
@@ -131,7 +131,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
   const updateHealthProfile = useCallback(
     async (data: HealthProfile) => {
       if (!user) return
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({
           weight_kg: data.weight_kg,
@@ -142,7 +142,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
-      setHealthProfile(data)
+      if (!error) setHealthProfile(data)
     },
     [user],
   )

@@ -21,8 +21,11 @@ export async function uploadMealPhoto(file: File): Promise<string | null> {
 
   if (error) return null
 
-  const { data } = supabase.storage.from('meal-photos').getPublicUrl(fileName)
-  return data.publicUrl
+  const { data: signedData } = await supabase.storage
+    .from('meal-photos')
+    .createSignedUrl(fileName, 3600)
+
+  return signedData?.signedUrl || null
 }
 
 export async function analyzeFoodPhoto(imageUrl: string): Promise<FoodAnalysisResult> {
