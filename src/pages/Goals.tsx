@@ -28,7 +28,7 @@ export default function Goals() {
       </div>
 
       <Tabs defaultValue="all" onValueChange={setFilter} className="w-full">
-        <TabsList className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-1 mb-6">
+        <TabsList className="bg-muted/60 backdrop-blur-md rounded-xl p-1 mb-6">
           <TabsTrigger value="all" className="rounded-lg">
             Todos
           </TabsTrigger>

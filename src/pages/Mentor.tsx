@@ -179,9 +179,9 @@ export default function Mentor() {
       </div>
 
       {!interviewStarted && !roadmap && (
-        <Card className="glass-card rounded-3xl border-none shadow-soft p-8 md:p-10 text-center animate-fade-in-up">
+        <Card className="rounded-xl p-8 md:p-10 text-center animate-fade-in-up">
           <div className="flex justify-center mb-4">
-            <div className="p-4 bg-primary/10 rounded-2xl">
+            <div className="p-4 bg-primary/10 rounded-xl">
               <Brain className="text-primary" size={40} />
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function Mentor() {
       )}
 
       {interviewStarted && !roadmap && (
-        <Card className="glass-card rounded-3xl border-none shadow-soft p-6 md:p-8 animate-fade-in-up">
+        <Card className="rounded-xl p-6 md:p-8 animate-fade-in-up">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0">

@@ -9,7 +9,7 @@ export function HabitGrowthChart() {
   const data = useMemo(() => generateHabitConsistencyData(30), [])
 
   return (
-    <Card className="glass-card rounded-2xl border-none shadow-soft">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Activity className="text-primary" size={20} />

@@ -9,7 +9,7 @@ import {
   Bot,
   PanelLeftClose,
   PanelLeftOpen,
-  Sparkles,
+  Mountain,
   ShoppingCart,
   Timer,
 } from 'lucide-react'
@@ -35,22 +35,22 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out border-r glass-card hidden md:flex flex-col',
+        'fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out border-r border-sidebar-border bg-sidebar hidden md:flex flex-col',
         sidebarCollapsed ? 'w-20' : 'w-64',
       )}
     >
       <div className="flex items-center justify-between p-6 h-20">
         {!sidebarCollapsed && (
-          <span className="text-lg font-bold flex items-center gap-2">
+          <span className="font-display text-lg font-bold flex items-center gap-2.5 tracking-tight">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
-              <Sparkles size={18} />
+              <Mountain size={18} strokeWidth={2.5} />
             </span>
             Vértice
           </span>
         )}
         {sidebarCollapsed && (
           <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
-            <Sparkles size={18} />
+            <Mountain size={18} strokeWidth={2.5} />
           </span>
         )}
         <button
@@ -70,12 +70,15 @@ export function Sidebar() {
               key={item.path}
               to={item.path}
               className={cn(
-                'flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group',
+                'relative flex items-center gap-4 px-3 py-3 rounded-lg transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar',
                 isActive
-                  ? 'bg-primary text-primary-foreground shadow-soft'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
+                  : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground',
               )}
             >
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-primary" />
+              )}
               <Icon
                 size={22}
                 className={cn(

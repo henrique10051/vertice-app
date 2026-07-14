@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Plus, Sparkles, User, LogOut } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { Plus, Mountain, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -16,20 +16,43 @@ import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
 import { useAuth } from '@/hooks/use-auth'
 
+const pageTitles: Record<string, string> = {
+  '/': 'Visão Geral',
+  '/habitos': 'Hábitos',
+  '/objetivos': 'Objetivos',
+  '/financas': 'Finanças',
+  '/mercado': 'Mercado',
+  '/pomodoro': 'Foco',
+  '/planos': 'Planos',
+  '/mentor': 'Mentor IA',
+  '/perfil': 'Perfil',
+  '/saude': 'Saúde',
+  '/agenda': 'Agenda',
+}
+
 export function Header() {
   const [modalOpen, setModalOpen] = useState(false)
   const { user, signOut } = useAuth()
+  const location = useLocation()
+  const title = pageTitles[location.pathname] ?? 'Vértice'
 
   return (
-    <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
+    <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-background/70 backdrop-blur-xl border-b border-border/70">
       <div>
-        <h1 className="text-2xl font-bold md:hidden flex items-center gap-2">
+        <h1 className="font-display text-2xl font-bold md:hidden flex items-center gap-2">
           <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary text-primary-foreground">
-            <Sparkles size={16} />
+            <Mountain size={16} strokeWidth={2.5} />
           </span>
           Vértice
         </h1>
-        <h2 className="text-xl font-semibold hidden md:block text-foreground">Visão Geral</h2>
+        <div className="hidden md:block">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Vértice
+          </p>
+          <h2 className="font-display text-xl font-semibold text-foreground leading-tight">
+            {title}
+          </h2>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">

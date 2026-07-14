@@ -1,47 +1,38 @@
-import { TrendingUp, TrendingDown, type LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 interface MetricCardProps {
   title: string
   value: string
-  change: number
+  /** Honest secondary reading (e.g. "3 de 8 concluídos"). No fabricated deltas. */
+  hint?: string
   icon: LucideIcon
-  iconColor: string
-  iconBg: string
+  iconColor?: string
+  iconBg?: string
 }
 
 export function MetricCard({
   title,
   value,
-  change,
+  hint,
   icon: Icon,
-  iconColor,
-  iconBg,
+  iconColor = 'text-primary',
+  iconBg = 'bg-primary/10',
 }: MetricCardProps) {
-  const isPositive = change >= 0
-
   return (
-    <Card className="glass-card rounded-2xl border-none shadow-soft">
+    <Card className="group relative overflow-hidden transition-[box-shadow,transform] duration-200 ease-out-quart hover:-translate-y-0.5 hover:shadow-elevation">
       <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className={cn('p-2 rounded-xl', iconBg)}>
-            <Icon className={iconColor} size={20} />
-          </div>
-          <div
-            className={cn(
-              'flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg',
-              isPositive
-                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
-                : 'text-rose-600 dark:text-rose-400 bg-rose-500/10',
-            )}
-          >
-            {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-            {Math.abs(change)}%
+        <div className="mb-4">
+          <div className={cn('inline-flex p-2 rounded-lg', iconBg)}>
+            <Icon className={iconColor} size={20} strokeWidth={2.25} />
           </div>
         </div>
-        <p className="text-muted-foreground text-xs md:text-sm font-medium">{title}</p>
-        <p className="text-xl md:text-2xl font-bold tracking-tight mt-1">{value}</p>
+        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">{title}</p>
+        <p className="data-num text-2xl md:text-3xl font-bold tracking-tight mt-1.5 text-foreground">
+          {value}
+        </p>
+        {hint && <p className="text-xs text-muted-foreground mt-1.5">{hint}</p>}
       </CardContent>
     </Card>
   )

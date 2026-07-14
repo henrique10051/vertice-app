@@ -9,10 +9,10 @@ export function FinancialGrowthChart() {
   const data = useMemo(() => generateFinancialTrendData(6), [])
 
   return (
-    <Card className="glass-card rounded-2xl border-none shadow-soft">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <TrendingUp className="text-emerald-500" size={20} />
+          <TrendingUp className="text-chart-4" size={20} />
           Crescimento Financeiro
         </CardTitle>
         <p className="text-sm text-muted-foreground">Evolução do saldo (6 meses)</p>

@@ -66,6 +66,9 @@ export default function Habits() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
+        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-1">
+          Consistência
+        </p>
         <h1 className="text-3xl font-bold tracking-tight mb-2">Rastreador de Hábitos</h1>
         <p className="text-muted-foreground">
           Mantenha a consistência para alcançar seus objetivos.
@@ -141,18 +144,18 @@ export default function Habits() {
                 key={date}
                 onClick={() => setSelectedDate(date)}
                 className={cn(
-                  'flex flex-col items-center justify-center w-16 h-20 rounded-2xl transition-all duration-200',
+                  'flex flex-col items-center justify-center w-16 h-20 rounded-xl transition-all duration-200',
                   isSelected
                     ? 'bg-primary text-primary-foreground shadow-elevation scale-105'
                     : isToday
                       ? 'bg-primary/10 text-primary border border-primary/30'
-                      : 'bg-white dark:bg-slate-900 border border-border/50 text-muted-foreground hover:border-primary/30',
+                      : 'bg-card border border-border/60 text-muted-foreground hover:border-primary/40',
                 )}
               >
                 <span className="text-xs font-medium uppercase">{dayName}</span>
-                <span className="text-xl font-bold">{dayNum}</span>
+                <span className="data-num text-xl font-bold">{dayNum}</span>
                 {completedCount > 0 && (
-                  <span className="text-[10px] mt-0.5">
+                  <span className="data-num text-[10px] mt-0.5">
                     {completedCount}/{habits.length}
                   </span>
                 )}

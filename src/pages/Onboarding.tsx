@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Sparkles,
+  Mountain,
   ArrowRight,
   ArrowLeft,
   Loader2,
@@ -95,7 +95,7 @@ export default function Onboarding() {
   const totalSteps = 5
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-slate-50 to-indigo-50 dark:from-primary/10 dark:via-slate-950 dark:to-indigo-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background topo-lines p-4">
       <div className="w-full max-w-2xl">
         <div className="flex items-center justify-center gap-2 mb-8">
           {Array.from({ length: totalSteps }).map((_, i) => {
@@ -111,11 +111,11 @@ export default function Onboarding() {
             )
           })}
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-8 border border-border/50">
+        <div className="bg-card rounded-2xl shadow-elevation p-8 border border-border/70">
           {step === 1 && (
             <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4">
-                <Sparkles size={32} />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-glow">
+                <Mountain size={30} strokeWidth={2.5} />
               </div>
               <h1 className="text-2xl font-bold">Bem-vindo ao Vértice!</h1>
               <p className="text-muted-foreground">

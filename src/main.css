@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,81 +6,96 @@
 
 @layer base {
   :root {
-    /* Neutral Slate Light Mode */
-    --background: 210 40% 98%;
-    --foreground: 222.2 47.4% 11.2%;
+    /* ===== Ascent — Light (glacier daylight) ===== */
+    /* Cool paper, never pure white */
+    --background: 205 33% 96%;
+    --foreground: 210 38% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 210 38% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 38% 13%;
 
-    /* Emerald Green (Primary) */
-    --primary: 160 84% 39%;
-    --primary-foreground: 210 40% 98%;
+    /* Glacial Teal — the workhorse brand (nav, progress, charts) */
+    --primary: 186 74% 34%;
+    --primary-foreground: 190 40% 98%;
 
-    /* Deep Indigo (Secondary) */
-    --secondary: 243 75% 59%;
-    --secondary-foreground: 210 40% 98%;
+    /* Sun-line Amber — the rare punch (streaks, peak moments) */
+    --secondary: 35 92% 52%;
+    --secondary-foreground: 30 45% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --muted: 205 25% 91%;
+    --muted-foreground: 210 14% 42%;
+    --accent: 186 45% 92%;
+    --accent-foreground: 186 74% 24%;
+    --destructive: 356 72% 52%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 160 84% 39%;
-    --radius: 1rem; /* Softer, larger rounded corners */
+    --border: 208 24% 87%;
+    --input: 208 24% 87%;
+    --ring: 186 74% 34%;
+    --radius: 0.625rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222.2 84% 4.9%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-foreground: 210 38% 13%;
+    --sidebar-primary: 186 74% 34%;
+    --sidebar-primary-foreground: 190 40% 98%;
+    --sidebar-accent: 186 45% 92%;
+    --sidebar-accent-foreground: 186 74% 24%;
+    --sidebar-border: 208 24% 87%;
+    --sidebar-ring: 186 74% 34%;
 
-    /* Chart colors optimized for Finances */
-    --chart-1: 160 84% 39%; /* Growth/Income */
-    --chart-2: 340 82% 52%; /* Food/Expenses */
-    --chart-3: 243 75% 59%; /* Transport */
-    --chart-4: 43 96% 58%; /* Housing */
-    --chart-5: 270 95% 65%; /* Other */
+    /* Chart palette — teal → amber ascent, cohesive not rainbow */
+    --chart-1: 186 74% 34%; /* teal — growth/income */
+    --chart-2: 35 92% 52%;  /* amber — highlight */
+    --chart-3: 200 60% 46%; /* glacier blue */
+    --chart-4: 158 52% 40%; /* moss */
+    --chart-5: 262 45% 56%; /* dusk violet */
+
+    --topo-line: 210 20% 55%;
   }
 
   .dark {
-    /* Charcoal Dark Mode */
-    --background: 222.2 47.4% 11.2%;
-    --foreground: 210 40% 98%;
-    --card: 217.2 32.6% 17.5%;
-    --card-foreground: 210 40% 98%;
-    --popover: 217.2 32.6% 17.5%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 243 75% 59%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 160 84% 39%;
+    /* ===== Ascent — Dark (twilight summit, the hero) ===== */
+    --background: 213 40% 8%;
+    --foreground: 200 22% 92%;
+    --card: 213 32% 13%;
+    --card-foreground: 200 22% 92%;
+    --popover: 213 34% 12%;
+    --popover-foreground: 200 22% 92%;
 
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 160 84% 39%;
+    --primary: 184 70% 46%;
+    --primary-foreground: 213 45% 8%;
+
+    --secondary: 36 94% 56%;
+    --secondary-foreground: 30 45% 10%;
+
+    --muted: 213 26% 18%;
+    --muted-foreground: 205 16% 62%;
+    --accent: 213 30% 20%;
+    --accent-foreground: 184 70% 60%;
+    --destructive: 356 66% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 213 26% 20%;
+    --input: 213 26% 22%;
+    --ring: 184 70% 46%;
+
+    --sidebar-background: 213 42% 7%;
+    --sidebar-foreground: 200 22% 92%;
+    --sidebar-primary: 184 70% 46%;
+    --sidebar-primary-foreground: 213 45% 8%;
+    --sidebar-accent: 213 30% 18%;
+    --sidebar-accent-foreground: 184 70% 60%;
+    --sidebar-border: 213 26% 18%;
+    --sidebar-ring: 184 70% 46%;
+
+    --chart-1: 184 70% 46%;
+    --chart-2: 36 94% 56%;
+    --chart-3: 200 66% 56%;
+    --chart-4: 158 56% 48%;
+    --chart-5: 262 60% 68%;
+
+    --topo-line: 200 30% 70%;
   }
 
   * {
@@ -88,6 +103,13 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Display face carries the personality — used with restraint */
+  h1, h2, h3, .font-display {
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 
   section[aria-label='Notifications alt+T'] {
@@ -97,57 +119,68 @@
 }
 
 @layer utilities {
+  /* Numbers as instrument readouts — tabular mono */
+  .data-num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* Signature: topographic contour texture (the summit) */
+  .topo-lines {
+    background-image: radial-gradient(
+      circle at 30% 120%,
+      transparent 0,
+      transparent 38px,
+      hsl(var(--topo-line) / 0.06) 39px,
+      hsl(var(--topo-line) / 0.06) 40px,
+      transparent 41px,
+      transparent 78px,
+      hsl(var(--topo-line) / 0.05) 79px,
+      hsl(var(--topo-line) / 0.05) 80px,
+      transparent 81px
+    );
+    background-size: 220px 220px;
+  }
+
+  /* Refined surface — replaces the generic glass look */
+  .surface {
+    @apply bg-card border border-border/70 shadow-soft;
+  }
+  .surface-raised {
+    @apply bg-card border border-border/70 shadow-elevation;
+  }
+  /* Migration alias: legacy markup used .glass-card everywhere. Per DESIGN.md
+     (flat-by-default, no decorative glass), it now resolves to the refined
+     surface — one edit re-skins every screen still on the old class. */
   .glass-card {
-    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-glass;
+    @apply bg-card border border-border/70 shadow-soft;
   }
 
   @keyframes check-pop {
-    0% {
-      transform: scale(0.8);
-      opacity: 0;
-    }
-    50% {
-      transform: scale(1.2);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
   }
-
   .animate-check-pop {
     animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
-
-  /* Keep existing animations from previous main.css */
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.18); }
+    100% { transform: scale(1); }
   }
+  .animate-pop { animation: pop 0.3s ease-out; }
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fade-in-up {
-    from {
-      transform: translateY(10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
-  .animate-fade-in {
-    animation: fade-in 0.4s ease-out;
-  }
-  .animate-fade-in-up {
-    animation: fade-in-up 0.5s ease-out forwards;
-  }
+  .animate-fade-in { animation: fade-in 0.4s ease-out; }
+  .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
 
-  .day-has-task {
-    position: relative;
-  }
+  .day-has-task { position: relative; }
   .day-has-task::after {
     content: '';
     position: absolute;

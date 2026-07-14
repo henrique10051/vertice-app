@@ -11,7 +11,7 @@ export default function Layout() {
   const { sidebarCollapsed } = useMainStore()
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background topo-lines flex flex-col md:flex-row">
       <Sidebar />
       <div
         className={cn(

@@ -42,41 +42,48 @@ export default function Finances() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="glass-card rounded-3xl border-none shadow-soft bg-gradient-to-br from-primary/10 to-transparent">
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden rounded-xl bg-primary text-primary-foreground border-none shadow-elevation">
+          <div className="topo-lines absolute inset-0 opacity-40" />
+          <CardContent className="relative p-6">
             <div className="flex justify-between items-start mb-4">
-              <span className="text-muted-foreground font-medium">Saldo Atual</span>
-              <div className="p-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
-                <Wallet className="text-primary" size={20} />
+              <span className="font-medium text-primary-foreground/80 uppercase text-xs tracking-wide">
+                Saldo Atual
+              </span>
+              <div className="p-2 bg-white/15 rounded-lg">
+                <Wallet size={20} />
               </div>
             </div>
-            <div className="text-4xl font-bold tracking-tighter">
+            <div className="data-num text-4xl font-bold tracking-tight">
               R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
-        <Card className="glass-card rounded-3xl border-none shadow-soft">
+        <Card>
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <span className="text-muted-foreground font-medium">Entradas</span>
-              <div className="p-2 bg-emerald-50 dark:bg-emerald-950 rounded-xl">
-                <TrendingUp className="text-emerald-500" size={20} />
+              <span className="text-muted-foreground font-medium uppercase text-xs tracking-wide">
+                Entradas
+              </span>
+              <div className="p-2 bg-chart-4/10 rounded-lg">
+                <TrendingUp className="text-chart-4" size={20} />
               </div>
             </div>
-            <div className="text-3xl font-bold tracking-tighter text-emerald-600 dark:text-emerald-400">
+            <div className="data-num text-3xl font-bold tracking-tight text-chart-4">
               R$ {income.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
-        <Card className="glass-card rounded-3xl border-none shadow-soft">
+        <Card>
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <span className="text-muted-foreground font-medium">Saídas</span>
-              <div className="p-2 bg-rose-50 dark:bg-rose-950 rounded-xl">
-                <TrendingDown className="text-rose-500" size={20} />
+              <span className="text-muted-foreground font-medium uppercase text-xs tracking-wide">
+                Saídas
+              </span>
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <TrendingDown className="text-destructive" size={20} />
               </div>
             </div>
-            <div className="text-3xl font-bold tracking-tighter text-rose-600 dark:text-rose-400">
+            <div className="data-num text-3xl font-bold tracking-tight text-destructive">
               R$ {expense.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
@@ -86,7 +93,7 @@ export default function Finances() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <TransactionsPanel transactions={transactions} onAdd={() => setAddOpen(true)} />
 
-        <Card className="glass-card rounded-3xl border-none shadow-soft">
+        <Card>
           <CardHeader>
             <CardTitle>Despesas por Categoria</CardTitle>
           </CardHeader>
@@ -126,7 +133,7 @@ export default function Finances() {
                     />
                     <span className="font-medium">{entry.name}</span>
                   </div>
-                  <span className="text-muted-foreground">
+                  <span className="data-num text-muted-foreground">
                     {Math.round((entry.value / expense) * 100)}%
                   </span>
                 </div>

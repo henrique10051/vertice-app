@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Sparkles, Loader2, MailCheck } from 'lucide-react'
+import { Mountain, Loader2, MailCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function Auth() {
@@ -57,24 +57,24 @@ export default function Auth() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-slate-50 to-indigo-50 dark:from-primary/10 dark:via-slate-950 dark:to-indigo-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background topo-lines p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
-            <Sparkles size={32} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-glow">
+            <Mountain size={30} strokeWidth={2.5} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Vértice</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Vértice</h1>
           <p className="text-muted-foreground mt-1">Seu sistema de crescimento pessoal</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-8 border border-border/50">
+        <div className="bg-card rounded-2xl shadow-elevation p-8 border border-border/70">
           <div className="flex gap-2 mb-6 bg-muted/50 rounded-xl p-1">
             <button
               onClick={() => setMode('login')}

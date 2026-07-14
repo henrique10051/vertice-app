@@ -81,18 +81,54 @@ export default function Index() {
     { day: 'Dom', score: 90 },
   ]
 
+  const now = new Date()
+  const hour = now.getHours()
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
+  const today = now.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="bg-primary/10 text-primary p-4 rounded-2xl flex items-center gap-4">
-        <span className="text-xl">✨</span>
-        <p className="font-medium italic text-sm md:text-base">{quotes[0]}</p>
+      {/* Hero — the ascent of the day */}
+      <div className="relative overflow-hidden rounded-lg border border-border/70 bg-card shadow-soft">
+        <div className="topo-lines absolute inset-0 opacity-70" />
+        <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {today}
+            </p>
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight mt-1">
+              {greeting}.
+            </h1>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-md italic">
+              {quotes[0]}
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center gap-5">
+            <div className="text-right">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Hábitos hoje
+              </p>
+              <p className="data-num text-4xl md:text-5xl font-bold text-primary leading-none mt-1">
+                {habitRate}
+                <span className="text-2xl align-top">%</span>
+              </p>
+              <p className="data-num text-xs text-muted-foreground mt-1">
+                {completedToday}/{habits.length} concluídos
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Taxa de Hábitos"
           value={`${habitRate}%`}
-          change={12}
+          hint={`${completedToday} de ${habits.length} hoje`}
           icon={Activity}
           iconColor="text-primary"
           iconBg="bg-primary/10"
@@ -100,26 +136,26 @@ export default function Index() {
         <MetricCard
           title="Saldo do Mês"
           value={`R$ ${balance.toLocaleString('pt-BR')}`}
-          change={8}
+          hint={balance >= 0 ? 'no positivo' : 'no vermelho'}
           icon={Wallet}
-          iconColor="text-emerald-500"
-          iconBg="bg-emerald-500/10"
+          iconColor="text-chart-4"
+          iconBg="bg-chart-4/10"
         />
         <MetricCard
           title="Taxa de Poupança"
           value={`${savingsRate}%`}
-          change={5}
+          hint="da renda do mês"
           icon={TrendingUp}
-          iconColor="text-indigo-500"
-          iconBg="bg-indigo-500/10"
+          iconColor="text-chart-3"
+          iconBg="bg-chart-3/10"
         />
         <MetricCard
           title="Objetivos Ativos"
           value={`${activeGoals}`}
-          change={0}
+          hint={mainGoal ? mainGoal.title : 'nenhum em progresso'}
           icon={Target}
-          iconColor="text-orange-500"
-          iconBg="bg-orange-500/10"
+          iconColor="text-chart-5"
+          iconBg="bg-chart-5/10"
         />
       </div>
 
@@ -139,7 +175,7 @@ export default function Index() {
         </div>
       ) : (
         <Link to="/saude">
-          <Card className="glass-card rounded-2xl border-none shadow-soft p-6 flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer">
+          <Card className="rounded-lg p-6 flex items-center justify-between hover:shadow-elevation transition-shadow cursor-pointer">
             <div>
               <p className="font-bold text-lg">Configurar Perfil de Saúde</p>
               <p className="text-sm text-muted-foreground">Calcule suas metas de calorias e água</p>
@@ -154,7 +190,7 @@ export default function Index() {
         <FinancialGrowthChart />
       </div>
 
-      <Card className="glass-card rounded-2xl border-none shadow-soft">
+      <Card className="rounded-lg">
         <CardHeader>
           <CardTitle>Atividade Semanal</CardTitle>
         </CardHeader>
@@ -187,10 +223,10 @@ export default function Index() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="glass-card rounded-2xl border-none shadow-soft">
+        <Card className="rounded-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Flame className="text-orange-500" /> Foco Diário
+              <Flame className="text-secondary" /> Foco Diário
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -198,7 +234,7 @@ export default function Index() {
               pendingHabits.map((h) => (
                 <div
                   key={h.id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
                   onClick={() => toggleHabit(h.id)}
                 >
                   <span className="font-medium text-sm">{h.title}</span>
@@ -217,19 +253,19 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card rounded-2xl border-none shadow-soft">
+        <Card className="rounded-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Wallet className="text-emerald-500" /> Finanças
+              <Wallet className="text-chart-4" /> Finanças
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-4 tracking-tight">
+            <div className="data-num text-3xl font-bold mb-4 tracking-tight">
               R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-emerald-500 font-medium">↑ R$ {monthlyIncome}</span>
-              <span className="text-rose-500 font-medium">↓ R$ {monthlyExpense}</span>
+            <div className="data-num flex justify-between text-sm">
+              <span className="text-chart-4 font-medium">↑ R$ {monthlyIncome}</span>
+              <span className="text-destructive font-medium">↓ R$ {monthlyExpense}</span>
             </div>
             <div className="w-full bg-muted h-2 rounded-full mt-4 overflow-hidden">
               <div
@@ -242,10 +278,10 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card rounded-2xl border-none shadow-soft">
+        <Card className="rounded-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <Target className="text-indigo-500" /> Objetivo
+              <Target className="text-chart-5" /> Objetivo
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center pt-4">
@@ -269,11 +305,11 @@ export default function Index() {
                   fill="transparent"
                   strokeDasharray={301.59}
                   strokeDashoffset={301.59 - (goalProgress / 100) * 301.59}
-                  className="text-indigo-500 transition-all duration-1000 ease-out"
+                  className="text-chart-5 transition-all duration-1000 ease-out"
                   strokeLinecap="round"
                 />
               </svg>
-              <div className="absolute text-2xl font-bold">{goalProgress}%</div>
+              <div className="data-num absolute text-2xl font-bold">{goalProgress}%</div>
             </div>
             <p className="mt-4 font-medium text-center text-sm">
               {mainGoal?.title || 'Nenhum objetivo'}

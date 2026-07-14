@@ -28,7 +28,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-slate-50 to-indigo-50 dark:from-primary/10 dark:via-slate-950 dark:to-indigo-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background topo-lines p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg">
@@ -38,7 +38,7 @@ export default function ForgotPassword() {
           <p className="text-muted-foreground mt-1">Recuperar senha</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-8 border border-border/50">
+        <div className="bg-card rounded-2xl shadow-elevation p-8 border border-border/70">
           <Link
             to="/auth"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-4"

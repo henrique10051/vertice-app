@@ -27,7 +27,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -87,8 +88,16 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        soft: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-        glass: '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+        // The One-Depth Rule: defined shadows, not a wide diffuse halo paired with a border.
+        soft: '0 1px 2px -1px rgba(16, 33, 48, 0.06), 0 3px 10px -6px rgba(16, 33, 48, 0.10)',
+        elevation:
+          '0 2px 4px -2px rgba(16, 33, 48, 0.08), 0 10px 24px -14px rgba(16, 33, 48, 0.18)',
+        glass: '0 8px 32px 0 rgba(16, 33, 48, 0.10)',
+        glow: '0 0 0 1px hsl(var(--primary) / 0.25), 0 8px 24px -10px hsl(var(--primary) / 0.4)',
+      },
+      transitionTimingFunction: {
+        'out-quart': 'cubic-bezier(0.25, 1, 0.5, 1)',
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },
