@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { CheckCircle2, Circle, Trash2 } from 'lucide-react'
+import { CheckCircle2, Circle, Trash2, Clock, Check } from 'lucide-react'
 import { HabitConsistencyBar } from '@/components/HabitConsistencyBar'
+import { DURATION_OPTIONS } from '@/lib/duration-options'
 import type { Habit } from '@/stores/useHabitsStore'
 
 const freqLabel: Record<string, string> = {
@@ -9,6 +11,9 @@ const freqLabel: Record<string, string> = {
   monthly: 'Mensal',
 }
 
+const durationLabel = (minutes: number) =>
+  DURATION_OPTIONS.find((d) => d.value === minutes)?.label ?? `${minutes} min`
+
 type HabitCardProps = {
   habit: Habit
   isDone: boolean
@@ -16,6 +21,7 @@ type HabitCardProps = {
   totalDays: number
   onToggle: () => void
   onDelete: () => void
+  onScheduleChange: (time: string | null, durationMinutes: number) => void
 }
 
 export function HabitCard({
@@ -25,7 +31,23 @@ export function HabitCard({
   totalDays,
   onToggle,
   onDelete,
+  onScheduleChange,
 }: HabitCardProps) {
+  const [editing, setEditing] = useState(false)
+  const [draftTime, setDraftTime] = useState('')
+  const [draftDuration, setDraftDuration] = useState(30)
+
+  const startEditing = () => {
+    setDraftTime(habit.scheduled_time?.slice(0, 5) || '')
+    setDraftDuration(habit.duration_minutes || 30)
+    setEditing(true)
+  }
+
+  const save = () => {
+    onScheduleChange(draftTime || null, draftDuration)
+    setEditing(false)
+  }
+
   return (
     <Card className="glass-card border-none rounded-2xl overflow-hidden group">
       <CardContent className="p-0">
@@ -39,9 +61,49 @@ export function HabitCard({
               {habit.description && (
                 <p className="text-sm text-muted-foreground mt-0.5">{habit.description}</p>
               )}
-              <span className="text-sm text-muted-foreground font-medium">
-                {freqLabel[habit.frequency] || 'Diária'}
-              </span>
+              <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                <span className="text-sm text-muted-foreground font-medium">
+                  {freqLabel[habit.frequency] || 'Diária'}
+                </span>
+                {editing ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="time"
+                      autoFocus
+                      value={draftTime}
+                      onChange={(e) => setDraftTime(e.target.value)}
+                      className="text-xs rounded-md border border-border/60 bg-background px-1.5 py-0.5"
+                    />
+                    <select
+                      value={draftDuration}
+                      onChange={(e) => setDraftDuration(Number(e.target.value))}
+                      className="text-xs rounded-md border border-border/60 bg-background px-1.5 py-0.5"
+                    >
+                      {DURATION_OPTIONS.map((d) => (
+                        <option key={d.value} value={d.value}>
+                          {d.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={save}
+                      className="p-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20"
+                    >
+                      <Check size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={startEditing}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5 hover:bg-primary/20 transition-colors"
+                  >
+                    <Clock size={11} />
+                    {habit.scheduled_time
+                      ? `${habit.scheduled_time.slice(0, 5)} · ${durationLabel(habit.duration_minutes || 30)}`
+                      : 'Definir horário'}
+                  </button>
+                )}
+              </div>
             </div>
             <button
               onClick={onDelete}

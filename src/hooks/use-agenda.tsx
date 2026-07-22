@@ -6,12 +6,19 @@ import {
   updateAgendaTask,
   deleteAgendaTask,
   type AgendaTask,
+  type AgendaCategory,
 } from '@/services/agenda'
 
 interface AgendaContextType {
   tasks: AgendaTask[]
   loading: boolean
-  addTask: (task: { title: string; description?: string; due_date: string }) => Promise<void>
+  addTask: (task: {
+    title: string
+    description?: string
+    due_date: string
+    category?: AgendaCategory
+    duration_minutes?: number
+  }) => Promise<{ error: string | null }>
   updateTask: (id: string, updates: Partial<AgendaTask>) => Promise<void>
   removeTask: (id: string) => Promise<void>
   toggleTask: (id: string, currentStatus: string) => Promise<void>
@@ -48,10 +55,17 @@ export const AgendaProvider = ({ children }: { children: ReactNode }) => {
   }, [refetch])
 
   const addTask = useCallback(
-    async (task: { title: string; description?: string; due_date: string }) => {
-      if (!user) return
-      await createAgendaTask(user.id, task)
+    async (task: {
+      title: string
+      description?: string
+      due_date: string
+      category?: AgendaCategory
+      duration_minutes?: number
+    }) => {
+      if (!user) return { error: 'Usuário não autenticado.' }
+      const { error } = await createAgendaTask(user.id, task)
       await refetch()
+      return { error: error?.message ?? null }
     },
     [user, refetch],
   )

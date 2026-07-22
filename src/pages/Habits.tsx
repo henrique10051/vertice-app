@@ -16,6 +16,7 @@ export default function Habits() {
   const {
     habits,
     toggleHabitForDate,
+    updateHabit,
     deleteHabit,
     habitLogsByDate,
     fetchHabitLogsForDate,
@@ -178,6 +179,9 @@ export default function Habits() {
               totalDays={consistency.totalDays}
               onToggle={() => toggleHabitForDate(habit.id, selectedDate)}
               onDelete={() => deleteHabit(habit.id)}
+              onScheduleChange={(time, durationMinutes) =>
+                updateHabit(habit.id, { scheduled_time: time, duration_minutes: durationMinutes })
+              }
             />
           )
         })}

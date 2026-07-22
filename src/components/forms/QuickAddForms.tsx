@@ -12,6 +12,7 @@ import {
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import { getTodayStr } from '@/lib/date-utils'
+import { DURATION_OPTIONS } from '@/lib/duration-options'
 import { useToast } from '@/hooks/use-toast'
 
 export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
@@ -20,11 +21,17 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
   const [name, setName] = useState('')
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily')
   const [description, setDescription] = useState('')
+  const [scheduledTime, setScheduledTime] = useState('')
+  const [duration, setDuration] = useState(30)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name) return
-    await addHabit(name, frequency, description)
+    const { error } = await addHabit(name, frequency, description, scheduledTime || null, duration)
+    if (error) {
+      toast({ title: 'Erro ao criar hábito', description: error, variant: 'destructive' })
+      return
+    }
     toast({ title: 'Hábito criado!', description: `${name} foi adicionado.` })
     onSuccess()
   }
@@ -61,6 +68,34 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
           </SelectContent>
         </Select>
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label>Horário fixo (opcional)</Label>
+          <Input
+            type="time"
+            value={scheduledTime}
+            onChange={(e) => setScheduledTime(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Duração</Label>
+          <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DURATION_OPTIONS.map((d) => (
+                <SelectItem key={d.value} value={String(d.value)}>
+                  {d.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Definindo um horário, o hábito passa a aparecer na Agenda todos os dias.
+      </p>
       <Button type="submit" className="w-full">
         Salvar Hábito
       </Button>

@@ -1,12 +1,16 @@
 import { supabase } from '@/lib/supabase/client'
 
+export type AgendaCategory = 'pessoal' | 'trabalho' | 'saude' | 'financas' | 'outro'
+
 export interface AgendaTask {
   id: string
   user_id: string
   title: string
   description: string | null
   due_date: string
+  duration_minutes: number
   status: 'pending' | 'completed'
+  category: AgendaCategory
   created_at: string
 }
 
@@ -21,7 +25,13 @@ export async function getAgendaTasks(userId: string) {
 
 export async function createAgendaTask(
   userId: string,
-  task: { title: string; description?: string; due_date: string },
+  task: {
+    title: string
+    description?: string
+    due_date: string
+    category?: AgendaCategory
+    duration_minutes?: number
+  },
 ) {
   const { data, error } = await supabase
     .from('agenda_tasks')
@@ -30,6 +40,8 @@ export async function createAgendaTask(
       title: task.title,
       description: task.description || null,
       due_date: task.due_date,
+      category: task.category || 'pessoal',
+      duration_minutes: task.duration_minutes || 60,
       status: 'pending',
     })
     .select()

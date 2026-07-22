@@ -11,27 +11,33 @@ export type Database = {
     Tables: {
       agenda_tasks: {
         Row: {
+          category: string
           created_at: string | null
           description: string | null
           due_date: string
+          duration_minutes: number
           id: string
           status: string | null
           title: string
           user_id: string
         }
         Insert: {
+          category?: string
           created_at?: string | null
           description?: string | null
           due_date: string
+          duration_minutes?: number
           id?: string
           status?: string | null
           title: string
           user_id: string
         }
         Update: {
+          category?: string
           created_at?: string | null
           description?: string | null
           due_date?: string
+          duration_minutes?: number
           id?: string
           status?: string | null
           title?: string
@@ -75,27 +81,33 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          duration_minutes: number
           frequency: string | null
           id: string
           is_completed: boolean | null
+          scheduled_time: string | null
           title: string
           user_id: string
         }
         Insert: {
           created_at?: string | null
           description?: string | null
+          duration_minutes?: number
           frequency?: string | null
           id?: string
           is_completed?: boolean | null
+          scheduled_time?: string | null
           title: string
           user_id: string
         }
         Update: {
           created_at?: string | null
           description?: string | null
+          duration_minutes?: number
           frequency?: string | null
           id?: string
           is_completed?: boolean | null
+          scheduled_time?: string | null
           title?: string
           user_id?: string
         }

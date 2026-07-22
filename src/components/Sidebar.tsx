@@ -12,6 +12,7 @@ import {
   Mountain,
   ShoppingCart,
   Timer,
+  CalendarDays,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useMainStore from '@/stores/main'
@@ -19,6 +20,7 @@ import useMainStore from '@/stores/main'
 const navItems = [
   { path: '/', label: 'Início', icon: LayoutDashboard },
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
+  { path: '/agenda', label: 'Agenda', icon: CalendarDays },
   { path: '/objetivos', label: 'Objetivos', icon: Target },
   { path: '/financas', label: 'Finanças', icon: Wallet },
   { path: '/mercado', label: 'Mercado', icon: ShoppingCart },

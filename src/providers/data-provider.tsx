@@ -10,6 +10,8 @@ export type Habit = {
   description: string
   frequency: string
   is_completed: boolean
+  scheduled_time: string | null
+  duration_minutes: number
   created_at: string
 }
 
@@ -30,7 +32,17 @@ interface DataContextType {
   habitLogsByDate: Record<string, string[]>
   toggleHabit: (id: string) => Promise<void>
   toggleHabitForDate: (id: string, date: string) => Promise<void>
-  addHabit: (title: string, frequency: string, description?: string) => Promise<void>
+  addHabit: (
+    title: string,
+    frequency: string,
+    description?: string,
+    scheduledTime?: string | null,
+    durationMinutes?: number,
+  ) => Promise<{ error: string | null }>
+  updateHabit: (
+    id: string,
+    updates: Partial<Pick<Habit, 'scheduled_time' | 'duration_minutes'>>,
+  ) => Promise<void>
   deleteHabit: (id: string) => Promise<void>
   addTransaction: (t: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
@@ -168,9 +180,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   )
 
   const addHabit = useCallback(
-    async (title: string, frequency: string, description?: string) => {
-      if (!user) return
-      const { data } = await supabase
+    async (
+      title: string,
+      frequency: string,
+      description?: string,
+      scheduledTime?: string | null,
+      durationMinutes?: number,
+    ) => {
+      if (!user) return { error: 'Usuário não autenticado.' }
+      const { data, error } = await supabase
         .from('habits')
         .insert({
           user_id: user.id,
@@ -178,12 +196,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
           frequency,
           description: description || '',
           is_completed: false,
+          scheduled_time: scheduledTime || null,
+          duration_minutes: durationMinutes || 30,
         })
         .select()
         .single()
       if (data) setHabits((prev) => [data, ...prev])
+      return { error: error?.message ?? null }
     },
     [user],
+  )
+
+  const updateHabit = useCallback(
+    async (id: string, updates: Partial<Pick<Habit, 'scheduled_time' | 'duration_minutes'>>) => {
+      setHabits((prev) => prev.map((h) => (h.id === id ? { ...h, ...updates } : h)))
+      await supabase.from('habits').update(updates).eq('id', id)
+    },
+    [],
   )
 
   const deleteHabit = useCallback(async (id: string) => {
@@ -226,6 +255,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         toggleHabit,
         toggleHabitForDate,
         addHabit,
+        updateHabit,
         deleteHabit,
         addTransaction,
         deleteTransaction,
