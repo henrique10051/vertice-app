@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import { getProfile, updateProfile } from '@/services/profiles'
-import { upsertSubscription } from '@/services/subscriptions'
+import { startCheckout } from '@/services/subscriptions'
 import { PLANS } from '@/lib/plans'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -87,8 +87,12 @@ export default function Onboarding() {
       gender,
       activity_level: activity,
     })
-    await upsertSubscription(user.id, selectedPlan)
+    const { initPoint } = await startCheckout(selectedPlan)
     setSubmitting(false)
+    if (initPoint) {
+      window.location.href = initPoint
+      return
+    }
     navigate('/')
   }
 

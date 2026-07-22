@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
-import { getSubscription, upsertSubscription } from '@/services/subscriptions'
+import { getSubscription, startCheckout } from '@/services/subscriptions'
 import { PLANS } from '@/lib/plans'
 import { PlanCard } from '@/components/PlanCard'
 import { useToast } from '@/hooks/use-toast'
@@ -29,17 +29,21 @@ export default function Plans() {
     setSelectedPlan(planId)
     if (!user || planId === currentPlan) return
     setUpdating(true)
-    const { error } = await upsertSubscription(user.id, planId)
+    const { initPoint, error } = await startCheckout(planId)
     setUpdating(false)
     if (error) {
       toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' })
-    } else {
-      setCurrentPlan(planId)
-      toast({
-        title: 'Plano atualizado!',
-        description: `Você está no plano ${planId.toUpperCase()}.`,
-      })
+      return
     }
+    if (initPoint) {
+      window.location.href = initPoint
+      return
+    }
+    setCurrentPlan(planId)
+    toast({
+      title: 'Plano atualizado!',
+      description: `Você está no plano ${planId.toUpperCase()}.`,
+    })
   }
 
   if (loading) {

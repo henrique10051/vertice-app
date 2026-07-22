@@ -18,19 +18,11 @@ export async function getSubscription(userId: string) {
   return { data: data as Subscription | null, error }
 }
 
-export async function upsertSubscription(userId: string, planType: string) {
-  const { data, error } = await supabase
-    .from('subscriptions')
-    .upsert(
-      {
-        user_id: userId,
-        plan_type: planType,
-        status: 'active',
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    )
-    .select()
-    .single()
-  return { data: data as Subscription | null, error }
+export async function startCheckout(planId: string) {
+  const { data, error } = await supabase.functions.invoke<{
+    success: boolean
+    init_point: string | null
+  }>('mercadopago-checkout', { body: { planId } })
+  if (error) return { initPoint: null, error }
+  return { initPoint: data?.init_point ?? null, error: null }
 }
