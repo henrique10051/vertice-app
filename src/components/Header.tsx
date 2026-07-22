@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Plus, Mountain, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { QuickAddModal } from './QuickAddModal'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
 import { useAuth } from '@/hooks/use-auth'
+import { getProfile } from '@/services/profiles'
 
 const pageTitles: Record<string, string> = {
   '/': 'Visão Geral',
@@ -32,9 +33,23 @@ const pageTitles: Record<string, string> = {
 
 export function Header() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const { user, signOut } = useAuth()
   const location = useLocation()
   const title = pageTitles[location.pathname] ?? 'Vértice'
+
+  useEffect(() => {
+    if (!user) {
+      setAvatarUrl(null)
+      return
+    }
+    const loadAvatar = () => {
+      getProfile(user.id).then(({ data }) => setAvatarUrl(data?.avatar_url || null))
+    }
+    loadAvatar()
+    window.addEventListener('profile-updated', loadAvatar)
+    return () => window.removeEventListener('profile-updated', loadAvatar)
+  }, [user])
 
   return (
     <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-background/70 backdrop-blur-xl border-b border-border/70">
@@ -69,10 +84,7 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <button className="rounded-full focus:outline-none">
               <Avatar className="h-10 w-10 border-2 border-primary/20 cursor-pointer">
-                <AvatarImage
-                  src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=1"
-                  alt="Usuário"
-                />
+                {avatarUrl && <AvatarImage src={avatarUrl} alt="Usuário" />}
                 <AvatarFallback>{user?.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
             </button>

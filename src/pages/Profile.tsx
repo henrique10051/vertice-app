@@ -47,6 +47,7 @@ export default function ProfilePage() {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' })
     } else {
       setProfile(data)
+      window.dispatchEvent(new Event('profile-updated'))
       toast({ title: 'Perfil atualizado!', description: 'Suas informações foram salvas.' })
     }
   }
