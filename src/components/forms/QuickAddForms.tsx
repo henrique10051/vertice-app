@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Plus, X } from 'lucide-react'
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore from '@/stores/useFinancesStore'
 import { getTodayStr } from '@/lib/date-utils'
@@ -104,12 +105,26 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 export function FinanceForm({ onSuccess }: { onSuccess: () => void }) {
-  const { addTransaction } = useFinancesStore()
+  const { addTransaction, financeCategories, addFinanceCategory, deleteFinanceCategory } =
+    useFinancesStore()
   const { toast } = useToast()
   const [desc, setDesc] = useState('')
   const [amount, setAmount] = useState('')
   const [type, setType] = useState<'income' | 'expense'>('expense')
-  const [cat, setCat] = useState<any>('Alimentação')
+  const [cat, setCat] = useState<any>('')
+  const [newCat, setNewCat] = useState('')
+  const [addingCat, setAddingCat] = useState(false)
+
+  if (!cat && financeCategories.length > 0) setCat(financeCategories[0])
+
+  const handleAddCategory = async () => {
+    const name = newCat.trim()
+    if (!name) return
+    await addFinanceCategory(name)
+    setCat(name)
+    setNewCat('')
+    setAddingCat(false)
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -162,18 +177,71 @@ export function FinanceForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <div className="space-y-2">
         <Label>Categoria</Label>
-        <Select value={cat} onValueChange={setCat}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Moradia">Moradia</SelectItem>
-            <SelectItem value="Alimentação">Alimentação</SelectItem>
-            <SelectItem value="Transporte">Transporte</SelectItem>
-            <SelectItem value="Educação/Crescimento">Educação/Crescimento</SelectItem>
-            <SelectItem value="Renda">Renda</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={cat} onValueChange={setCat}>
+            <SelectTrigger className="flex-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {financeCategories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setAddingCat((v) => !v)}
+            aria-label="Nova categoria"
+          >
+            <Plus size={16} />
+          </Button>
+        </div>
+        {addingCat && (
+          <div className="flex gap-2">
+            <Input
+              placeholder="Nova categoria"
+              value={newCat}
+              onChange={(e) => setNewCat(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAddCategory()
+                }
+              }}
+              autoFocus
+            />
+            <Button type="button" onClick={handleAddCategory}>
+              Adicionar
+            </Button>
+          </div>
+        )}
+        {financeCategories.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {financeCategories.map((c) => (
+              <span
+                key={c}
+                className="flex items-center gap-1 text-xs bg-muted rounded-full px-2 py-1 text-muted-foreground"
+              >
+                {c}
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteFinanceCategory(c)
+                    if (cat === c) setCat('')
+                  }}
+                  aria-label={`Remover categoria ${c}`}
+                  className="hover:text-rose-500"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <Button type="submit" className="w-full">
         Salvar Transação

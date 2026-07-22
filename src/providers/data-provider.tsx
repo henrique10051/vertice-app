@@ -46,6 +46,9 @@ interface DataContextType {
   deleteHabit: (id: string) => Promise<void>
   addTransaction: (t: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
+  financeCategories: string[]
+  addFinanceCategory: (name: string) => Promise<void>
+  deleteFinanceCategory: (name: string) => Promise<void>
   refetchHabits: () => Promise<void>
   refetchTransactions: () => Promise<void>
   fetchHabitLogsForDate: (date: string) => Promise<void>
@@ -65,6 +68,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = useState<Habit[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [habitLogsByDate, setHabitLogsByDate] = useState<Record<string, string[]>>({})
+  const [financeCategories, setFinanceCategories] = useState<string[]>([])
 
   const fetchHabits = useCallback(async () => {
     if (!user) return
@@ -119,16 +123,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [user],
   )
 
+  const fetchFinanceCategories = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('finance_categories')
+      .select('name')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+    setFinanceCategories((data || []).map((c) => c.name))
+  }, [user])
+
   useEffect(() => {
     if (user) {
       fetchHabits()
       fetchTransactions()
+      fetchFinanceCategories()
     } else {
       setHabits([])
       setTransactions([])
       setHabitLogsByDate({})
+      setFinanceCategories([])
     }
-  }, [user, fetchHabits, fetchTransactions])
+  }, [user, fetchHabits, fetchTransactions, fetchFinanceCategories])
 
   const toggleHabitForDate = useCallback(
     async (id: string, date: string) => {
@@ -246,6 +262,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await supabase.from('transactions').delete().eq('id', id)
   }, [])
 
+  const addFinanceCategory = useCallback(
+    async (name: string) => {
+      if (!user || !name.trim()) return
+      const { data } = await supabase
+        .from('finance_categories')
+        .insert({ user_id: user.id, name: name.trim() })
+        .select()
+        .single()
+      if (data) setFinanceCategories((prev) => [...prev, data.name])
+    },
+    [user],
+  )
+
+  const deleteFinanceCategory = useCallback(
+    async (name: string) => {
+      if (!user) return
+      setFinanceCategories((prev) => prev.filter((c) => c !== name))
+      await supabase.from('finance_categories').delete().eq('user_id', user.id).eq('name', name)
+    },
+    [user],
+  )
+
   return (
     <DataContext.Provider
       value={{
@@ -259,6 +297,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         deleteHabit,
         addTransaction,
         deleteTransaction,
+        financeCategories,
+        addFinanceCategory,
+        deleteFinanceCategory,
         refetchHabits: fetchHabits,
         refetchTransactions: fetchTransactions,
         fetchHabitLogsForDate,

@@ -2,8 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Transaction } from '@/stores/useFinancesStore'
 import { formatDatePT } from '@/lib/date-utils'
 import { AddCard } from './AddCard'
-import { DollarSign, Home, ShoppingCart, Car, BookOpen } from 'lucide-react'
+import { DollarSign, Home, ShoppingCart, Car, BookOpen, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import useFinancesStore from '@/stores/useFinancesStore'
 
 const categoryIcons: Record<string, any> = {
   Moradia: Home,
@@ -20,6 +21,7 @@ export function TransactionsPanel({
   transactions: Transaction[]
   onAdd: () => void
 }) {
+  const { deleteTransaction } = useFinancesStore()
   return (
     <Card className="glass-card rounded-3xl border-none shadow-soft lg:col-span-2">
       <CardHeader>
@@ -32,7 +34,7 @@ export function TransactionsPanel({
           return (
             <div
               key={t.id}
-              className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-2xl transition-colors"
+              className="group flex items-center justify-between p-3 hover:bg-muted/50 rounded-2xl transition-colors"
             >
               <div className="flex items-center gap-4">
                 <div
@@ -52,14 +54,23 @@ export function TransactionsPanel({
                   </p>
                 </div>
               </div>
-              <div
-                className={cn(
-                  'font-bold',
-                  isIncome ? 'text-emerald-600 dark:text-emerald-400' : '',
-                )}
-              >
-                {isIncome ? '+' : '-'} R${' '}
-                {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    'font-bold',
+                    isIncome ? 'text-emerald-600 dark:text-emerald-400' : '',
+                  )}
+                >
+                  {isIncome ? '+' : '-'} R${' '}
+                  {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+                <button
+                  onClick={() => deleteTransaction(t.id)}
+                  aria-label="Excluir transação"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
           )
