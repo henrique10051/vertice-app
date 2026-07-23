@@ -4,13 +4,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar'
 import useHabitsStore from '@/stores/useHabitsStore'
 import { getTodayStr, addDays, formatDateLongPT, dateToStr, strToDate } from '@/lib/date-utils'
+import { computeStreak, computeLongestStreak } from '@/lib/habit-stats'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AddCard } from '@/components/AddCard'
 import { HabitAddDialog } from '@/components/HabitAddDialog'
-import { HabitProgressChart } from '@/components/HabitProgressChart'
+import { HabitStatsCards } from '@/components/HabitStatsCards'
+import { HabitEvolutionChart } from '@/components/HabitEvolutionChart'
 import { HabitCard } from '@/components/HabitCard'
 import { ptBR } from 'date-fns/locale'
+
+const HISTORY_DAYS = 30
 
 export default function Habits() {
   const {
@@ -27,10 +31,15 @@ export default function Habits() {
   const [addOpen, setAddOpen] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
 
-  const days = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(selectedDate, -(6 - i))),
+  const visibleDays = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => addDays(selectedDate, i - 2)),
     [selectedDate],
   )
+  const historyDays = useMemo(
+    () => Array.from({ length: HISTORY_DAYS }, (_, i) => addDays(today, -(HISTORY_DAYS - 1 - i))),
+    [today],
+  )
+  const last7Days = useMemo(() => historyDays.slice(-7), [historyDays])
   const selectedDateObj = useMemo(() => strToDate(selectedDate), [selectedDate])
 
   useEffect(() => {
@@ -38,43 +47,75 @@ export default function Habits() {
   }, [selectedDate, fetchHabitLogsForDate])
 
   useEffect(() => {
-    fetchHabitLogsRange(days[0], days[days.length - 1])
-  }, [habits.length, fetchHabitLogsRange, days])
+    fetchHabitLogsRange(historyDays[0], historyDays[historyDays.length - 1])
+  }, [habits.length, fetchHabitLogsRange, historyDays])
 
   const completedIds = habitLogsByDate[selectedDate] || []
 
-  const chartData = useMemo(() => {
-    return days.map((date) => {
+  const evolutionData = useMemo(() => {
+    return historyDays.map((date) => {
       const count = habitLogsByDate[date]?.length || 0
-      const dayName = strToDate(date)
-        .toLocaleDateString('pt-BR', { weekday: 'short' })
-        .replace('.', '')
-      return { day: dayName, count, date }
+      const rate = habits.length > 0 ? Math.round((count / habits.length) * 100) : 0
+      const label = strToDate(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      return { date, label, rate }
     })
-  }, [days, habitLogsByDate])
+  }, [historyDays, habitLogsByDate, habits.length])
 
-  const consistencyByHabit = useMemo(() => {
-    const map: Record<string, { completedDays: number; totalDays: number }> = {}
+  const activeOverallDates = useMemo(() => {
+    const set = new Set<string>()
+    historyDays.forEach((date) => {
+      if ((habitLogsByDate[date]?.length || 0) > 0) set.add(date)
+    })
+    return set
+  }, [historyDays, habitLogsByDate])
+
+  const currentStreak = useMemo(
+    () => computeStreak(activeOverallDates, today),
+    [activeOverallDates, today],
+  )
+  const bestStreak = useMemo(
+    () => Math.max(currentStreak, computeLongestStreak(activeOverallDates)),
+    [activeOverallDates, currentStreak],
+  )
+
+  const last7DaysRates = useMemo(
+    () =>
+      last7Days.map((date) => {
+        const count = habitLogsByDate[date]?.length || 0
+        return habits.length > 0 ? Math.round((count / habits.length) * 100) : 0
+      }),
+    [last7Days, habitLogsByDate, habits.length],
+  )
+  const consistencyPercent = useMemo(() => {
+    if (last7DaysRates.length === 0) return 0
+    return Math.round(last7DaysRates.reduce((a, b) => a + b, 0) / last7DaysRates.length)
+  }, [last7DaysRates])
+
+  const habitStreaks = useMemo(() => {
+    const map: Record<string, { streak: number; recentDays: boolean[] }> = {}
     habits.forEach((habit) => {
-      const completedDays = days.filter((date) =>
-        (habitLogsByDate[date] || []).includes(habit.id),
-      ).length
-      map[habit.id] = { completedDays, totalDays: days.length }
+      const activeDates = new Set<string>()
+      historyDays.forEach((date) => {
+        if ((habitLogsByDate[date] || []).includes(habit.id)) activeDates.add(date)
+      })
+      map[habit.id] = {
+        streak: computeStreak(activeDates, today),
+        recentDays: last7Days.map((date) => activeDates.has(date)),
+      }
     })
     return map
-  }, [habits, days, habitLogsByDate])
+  }, [habits, historyDays, habitLogsByDate, today, last7Days])
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground mb-1">
-          Consistência
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Rastreador de Hábitos</h1>
-        <p className="text-muted-foreground">
-          Mantenha a consistência para alcançar seus objetivos.
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <HabitStatsCards
+        completedToday={completedIds.length}
+        totalHabits={habits.length}
+        currentStreak={currentStreak}
+        bestStreak={bestStreak}
+        consistencyPercent={consistencyPercent}
+        last7DaysRates={last7DaysRates}
+      />
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
@@ -128,55 +169,47 @@ export default function Habits() {
         )}
       </div>
 
-      <HabitProgressChart data={chartData} maxHabits={habits.length} />
-
-      <div className="overflow-x-auto pb-4 hide-scrollbar">
+      <div className="overflow-x-auto pb-1 hide-scrollbar">
         <div className="flex gap-3 min-w-max">
-          {days.map((date) => {
+          {visibleDays.map((date) => {
             const isSelected = date === selectedDate
             const isToday = date === today
             const dayName = strToDate(date)
               .toLocaleDateString('pt-BR', { weekday: 'short' })
               .replace('.', '')
             const dayNum = date.split('-')[2]
-            const completedCount = habitLogsByDate[date]?.length || 0
             return (
               <button
                 key={date}
                 onClick={() => setSelectedDate(date)}
                 className={cn(
-                  'flex flex-col items-center justify-center w-16 h-20 rounded-xl transition-all duration-200',
+                  'flex flex-col items-center justify-center w-24 h-16 rounded-2xl transition-all duration-200',
                   isSelected
-                    ? 'bg-primary text-primary-foreground shadow-elevation scale-105'
+                    ? 'bg-primary text-primary-foreground shadow-elevation'
                     : isToday
                       ? 'bg-primary/10 text-primary border border-primary/30'
                       : 'bg-card border border-border/60 text-muted-foreground hover:border-primary/40',
                 )}
               >
-                <span className="text-xs font-medium uppercase">{dayName}</span>
+                <span className="text-[11px] font-medium uppercase tracking-wide">{dayName}</span>
                 <span className="data-num text-xl font-bold">{dayNum}</span>
-                {completedCount > 0 && (
-                  <span className="data-num text-[10px] mt-0.5">
-                    {completedCount}/{habits.length}
-                  </span>
-                )}
               </button>
             )
           })}
         </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {habits.map((habit) => {
           const isDone = completedIds.includes(habit.id)
-          const consistency = consistencyByHabit[habit.id] || { completedDays: 0, totalDays: 7 }
+          const { streak, recentDays } = habitStreaks[habit.id] || { streak: 0, recentDays: [] }
           return (
             <HabitCard
               key={habit.id}
               habit={habit}
               isDone={isDone}
-              completedDays={consistency.completedDays}
-              totalDays={consistency.totalDays}
+              streak={streak}
+              recentDays={recentDays}
               onToggle={() => toggleHabitForDate(habit.id, selectedDate)}
               onDelete={() => deleteHabit(habit.id)}
               onScheduleChange={(time, durationMinutes) =>
@@ -185,8 +218,10 @@ export default function Habits() {
             />
           )
         })}
-        <AddCard onClick={() => setAddOpen(true)} className="min-h-[88px]" />
+        <AddCard onClick={() => setAddOpen(true)} className="min-h-[72px]" />
       </div>
+
+      <HabitEvolutionChart data={evolutionData} />
 
       <HabitAddDialog open={addOpen} setOpen={setAddOpen} />
     </div>
