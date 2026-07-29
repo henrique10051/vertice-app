@@ -80,6 +80,12 @@ Deno.serve(async (req: Request) => {
     }
 
     const appUrl = Deno.env.get('APP_URL') || 'https://vertice.app'
+    // Mercado Pago sandbox rejects preapprovals where the payer isn't a test
+    // user (see ROADMAP: "Both payer and collector must be real or test
+    // users"). MERCADOPAGO_TEST_PAYER_EMAIL is only set while running against
+    // sandbox credentials; unset it (or swap to a production access token)
+    // and this falls back to the real user's email automatically.
+    const payerEmail = Deno.env.get('MERCADOPAGO_TEST_PAYER_EMAIL') || user.email
 
     const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
       method: 'POST',
@@ -90,7 +96,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         reason: `Vértice ${planId === 'premium' ? 'Premium' : 'Pro'}`,
         external_reference: user.id,
-        payer_email: user.email,
+        payer_email: payerEmail,
         back_url: `${appUrl}/planos`,
         auto_recurring: {
           frequency: 1,
