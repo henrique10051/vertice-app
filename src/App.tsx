@@ -28,6 +28,7 @@ import Pomodoro from '@/pages/Pomodoro'
 import { InventoryProvider } from '@/hooks/use-inventory'
 import { AgendaProvider } from '@/hooks/use-agenda'
 import { NotificationProvider } from '@/hooks/use-notifications'
+import { CustomTrackersProvider } from '@/hooks/use-custom-trackers'
 import { NotificationGenerator } from '@/components/NotificationGenerator'
 import { getProfile, type Profile as ProfileData } from '@/services/profiles'
 import ForgotPassword from '@/pages/ForgotPassword'
@@ -35,6 +36,8 @@ import UpdatePassword from '@/pages/UpdatePassword'
 import AgendaPage from '@/pages/Agenda'
 import Treino from '@/pages/Treino'
 import Leitura from '@/pages/Leitura'
+import Rotinas from '@/pages/Rotinas'
+import Rastreadores from '@/pages/Rastreadores'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -88,59 +91,63 @@ const App = () => (
       <DataProvider>
         <HealthProvider>
           <WorkoutProvider>
-          <ReadingProvider>
-            <InventoryProvider>
-            <AgendaProvider>
-              <NotificationProvider>
-                <NotificationGenerator />
-                <BrowserRouter>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Sonner />
-                    <Routes>
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/privacidade" element={<Privacy />} />
-                      <Route path="/forgot-password" element={<ForgotPassword />} />
-                      <Route path="/update-password" element={<UpdatePassword />} />
-                      <Route
-                        path="/onboarding"
-                        element={
-                          <ProtectedRoute>
-                            <Onboarding />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        element={
-                          <ProtectedRoute>
-                            <RequireOnboarding>
-                              <Layout />
-                            </RequireOnboarding>
-                          </ProtectedRoute>
-                        }
-                      >
-                        <Route path="/" element={<Index />} />
-                        <Route path="/habitos" element={<Habits />} />
-                        <Route path="/objetivos" element={<Goals />} />
-                        <Route path="/financas" element={<Finances />} />
-                        <Route path="/mercado" element={<Mercado />} />
-                        <Route path="/pomodoro" element={<Pomodoro />} />
-                        <Route path="/planos" element={<Plans />} />
-                        <Route path="/agenda" element={<AgendaPage />} />
-                        <Route path="/saude" element={<Health />} />
-                        <Route path="/treino" element={<Treino />} />
-                        <Route path="/leitura" element={<Leitura />} />
-                        <Route path="/mentor" element={<Mentor />} />
-                        <Route path="/perfil" element={<Profile />} />
-                      </Route>
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </TooltipProvider>
-                </BrowserRouter>
-              </NotificationProvider>
-            </AgendaProvider>
-          </InventoryProvider>{' '}
-          </ReadingProvider>
+            <ReadingProvider>
+              <InventoryProvider>
+                <AgendaProvider>
+                  <CustomTrackersProvider>
+                    <NotificationProvider>
+                      <NotificationGenerator />
+                      <BrowserRouter>
+                        <TooltipProvider>
+                          <Toaster />
+                          <Sonner />
+                          <Routes>
+                            <Route path="/auth" element={<Auth />} />
+                            <Route path="/privacidade" element={<Privacy />} />
+                            <Route path="/forgot-password" element={<ForgotPassword />} />
+                            <Route path="/update-password" element={<UpdatePassword />} />
+                            <Route
+                              path="/onboarding"
+                              element={
+                                <ProtectedRoute>
+                                  <Onboarding />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              element={
+                                <ProtectedRoute>
+                                  <RequireOnboarding>
+                                    <Layout />
+                                  </RequireOnboarding>
+                                </ProtectedRoute>
+                              }
+                            >
+                              <Route path="/" element={<Index />} />
+                              <Route path="/habitos" element={<Habits />} />
+                              <Route path="/rotinas" element={<Rotinas />} />
+                              <Route path="/rastreadores" element={<Rastreadores />} />
+                              <Route path="/objetivos" element={<Goals />} />
+                              <Route path="/financas" element={<Finances />} />
+                              <Route path="/mercado" element={<Mercado />} />
+                              <Route path="/pomodoro" element={<Pomodoro />} />
+                              <Route path="/planos" element={<Plans />} />
+                              <Route path="/agenda" element={<AgendaPage />} />
+                              <Route path="/saude" element={<Health />} />
+                              <Route path="/treino" element={<Treino />} />
+                              <Route path="/leitura" element={<Leitura />} />
+                              <Route path="/mentor" element={<Mentor />} />
+                              <Route path="/perfil" element={<Profile />} />
+                            </Route>
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </TooltipProvider>
+                      </BrowserRouter>
+                    </NotificationProvider>
+                  </CustomTrackersProvider>
+                </AgendaProvider>
+              </InventoryProvider>{' '}
+            </ReadingProvider>
           </WorkoutProvider>
         </HealthProvider>
       </DataProvider>

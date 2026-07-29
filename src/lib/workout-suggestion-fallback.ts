@@ -46,7 +46,8 @@ const SPLITS: Record<string, Omit<ProposedWorkoutHabit, 'dayOfWeek'>[]> = {
     },
     {
       title: 'Treino de Ombro e Core',
-      description: 'Desenvolvimento Militar 4x8-10, Elevação Lateral 3x12-15, Abdominal Supra 3x15-20.',
+      description:
+        'Desenvolvimento Militar 4x8-10, Elevação Lateral 3x12-15, Abdominal Supra 3x15-20.',
       frequency: 'weekly',
     },
   ],
@@ -55,7 +56,9 @@ const SPLITS: Record<string, Omit<ProposedWorkoutHabit, 'dayOfWeek'>[]> = {
 const DEFAULT_DAYS = ['Segunda', 'Quarta', 'Sexta', 'Sábado']
 
 /** Rule-based fallback used when the AI edge function is unavailable. */
-export function generateFallbackWorkoutSuggestion(ctx: WorkoutSuggestionContext): WorkoutSuggestion {
+export function generateFallbackWorkoutSuggestion(
+  ctx: WorkoutSuggestionContext,
+): WorkoutSuggestion {
   const trained = new Set(ctx.muscleGroupsTrained.map((m) => m.toLowerCase()))
   const filtered = SPLITS.default.filter((h) => {
     if (trained.size === 0) return true

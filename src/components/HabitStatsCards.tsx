@@ -28,7 +28,10 @@ export function HabitStatsCards({
             Hoje
           </p>
           <p className="text-2xl font-bold data-num">
-            {completedToday} <span className="text-base font-medium text-muted-foreground">/ {totalHabits} concluídos</span>
+            {completedToday}{' '}
+            <span className="text-base font-medium text-muted-foreground">
+              / {totalHabits} concluídos
+            </span>
           </p>
           <Progress
             value={totalHabits > 0 ? (completedToday / totalHabits) * 100 : 0}
@@ -43,7 +46,8 @@ export function HabitStatsCards({
             Sequência atual
           </p>
           <p className="text-2xl font-bold data-num flex items-center gap-1.5">
-            {currentStreak} <span className="text-base font-medium text-muted-foreground">dias</span>
+            {currentStreak}{' '}
+            <span className="text-base font-medium text-muted-foreground">dias</span>
             <Flame size={20} className="text-amber-500 fill-amber-500" />
           </p>
           <p className="text-xs text-muted-foreground data-num">

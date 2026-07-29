@@ -21,10 +21,10 @@ export default function Privacy() {
           <section className="space-y-2">
             <h3 className="text-lg font-semibold">1. Quem somos e o que fazemos</h3>
             <p>
-              O Vértice é um aplicativo de organização pessoal (hábitos, finanças, saúde, agenda
-              e um mentor com inteligência artificial). Ao criar uma conta, você concorda com os
-              termos descritos abaixo, em conformidade com a Lei Geral de Proteção de Dados
-              (LGPD — Lei 13.709/2018).
+              O Vértice é um aplicativo de organização pessoal (hábitos, finanças, saúde, agenda e
+              um mentor com inteligência artificial). Ao criar uma conta, você concorda com os
+              termos descritos abaixo, em conformidade com a Lei Geral de Proteção de Dados (LGPD —
+              Lei 13.709/2018).
             </p>
           </section>
 
@@ -54,10 +54,10 @@ export default function Privacy() {
           <section className="space-y-2">
             <h3 className="text-lg font-semibold">4. Compartilhamento com terceiros</h3>
             <p>
-              Compartilhamos dados apenas com prestadores de serviço estritamente necessários para
-              a operação do app: Supabase (banco de dados e autenticação), OpenAI (respostas do
-              mentor de IA) e Mercado Pago (processamento de pagamentos). Cada um desses
-              prestadores possui suas próprias políticas de segurança e privacidade.
+              Compartilhamos dados apenas com prestadores de serviço estritamente necessários para a
+              operação do app: Supabase (banco de dados e autenticação), OpenAI (respostas do mentor
+              de IA) e Mercado Pago (processamento de pagamentos). Cada um desses prestadores possui
+              suas próprias políticas de segurança e privacidade.
             </p>
           </section>
 
@@ -90,8 +90,8 @@ export default function Privacy() {
           <section className="space-y-2">
             <h3 className="text-lg font-semibold">7. Retenção e exclusão</h3>
             <p>
-              Ao solicitar a exclusão da conta, todos os seus dados são removidos permanentemente
-              do banco de dados de forma imediata e irreversível.
+              Ao solicitar a exclusão da conta, todos os seus dados são removidos permanentemente do
+              banco de dados de forma imediata e irreversível.
             </p>
           </section>
 

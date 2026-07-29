@@ -74,7 +74,10 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setSets(setsResult.data || [])
     setPlan(
       planResult.data
-        ? { summary: planResult.data.summary, items: (planResult.data.items as WorkoutPlanItem[]) || [] }
+        ? {
+            summary: planResult.data.summary,
+            items: (planResult.data.items as WorkoutPlanItem[]) || [],
+          }
         : null,
     )
     setLoading(false)
@@ -129,9 +132,8 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const addSet = useCallback(
     async (sessionId: string, exerciseId: string, reps: number, weightKg: number, rpe?: number) => {
       if (!user) return
-      const setNumber = sets.filter(
-        (s) => s.session_id === sessionId && s.exercise_id === exerciseId,
-      ).length + 1
+      const setNumber =
+        sets.filter((s) => s.session_id === sessionId && s.exercise_id === exerciseId).length + 1
 
       const { data, error } = await supabase
         .from('workout_sets')

@@ -1,9 +1,19 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ListChecks, Wallet, CalendarDays, User } from 'lucide-react'
+import {
+  LayoutDashboard,
+  ListChecks,
+  Wallet,
+  CalendarDays,
+  User,
+  SunMoon,
+  Database,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { path: '/', label: 'Início', icon: LayoutDashboard },
+  { path: '/rotinas', label: 'Rotina', icon: SunMoon },
+  { path: '/rastreadores', label: 'Rastreadores', icon: Database },
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
   { path: '/agenda', label: 'Agenda', icon: CalendarDays },
   { path: '/financas', label: 'Finanças', icon: Wallet },

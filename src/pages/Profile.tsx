@@ -283,8 +283,8 @@ export default function ProfilePage() {
             <div>
               <p className="font-medium">Lembretes push</p>
               <p className="text-sm text-muted-foreground">
-                Receba um aviso no horário marcado de cada hábito ou tarefa da agenda, mesmo
-                com o app fechado.
+                Receba um aviso no horário marcado de cada hábito ou tarefa da agenda, mesmo com o
+                app fechado.
               </p>
             </div>
             <Switch
@@ -295,8 +295,8 @@ export default function ProfilePage() {
           </div>
           {!isPushSupported() && (
             <p className="text-xs text-muted-foreground mt-2">
-              Seu navegador não suporta notificações push, ou o app ainda não foi instalado na
-              tela de início (necessário no iPhone).
+              Seu navegador não suporta notificações push, ou o app ainda não foi instalado na tela
+              de início (necessário no iPhone).
             </p>
           )}
         </CardContent>
@@ -311,8 +311,8 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Conforme a LGPD, você pode baixar uma cópia de todos os seus dados ou excluir sua
-            conta permanentemente. Leia a{' '}
+            Conforme a LGPD, você pode baixar uma cópia de todos os seus dados ou excluir sua conta
+            permanentemente. Leia a{' '}
             <Link to="/privacidade" target="_blank" className="text-primary hover:underline">
               Política de Privacidade
             </Link>
@@ -355,11 +355,7 @@ export default function ProfilePage() {
                   disabled={deleting}
                   className="bg-rose-500 hover:bg-rose-600 focus:ring-rose-500"
                 >
-                  {deleting ? (
-                    <Loader2 className="animate-spin" size={18} />
-                  ) : (
-                    'Sim, excluir tudo'
-                  )}
+                  {deleting ? <Loader2 className="animate-spin" size={18} /> : 'Sim, excluir tudo'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

@@ -43,9 +43,9 @@ export default function Treino() {
   const [newExerciseName, setNewExerciseName] = useState('')
   const [savingSet, setSavingSet] = useState(false)
 
-  const [suggestion, setSuggestion] = useState<
-    Awaited<ReturnType<typeof fetchWorkoutSuggestion>> | null
-  >(null)
+  const [suggestion, setSuggestion] = useState<Awaited<
+    ReturnType<typeof fetchWorkoutSuggestion>
+  > | null>(null)
   const [loadingSuggestion, setLoadingSuggestion] = useState(false)
   const [savingPlan, setSavingPlan] = useState(false)
 
@@ -81,7 +81,13 @@ export default function Treino() {
     setSavingSet(true)
     const session = await getOrCreateTodaySession()
     if (session) {
-      await addSet(session.id, selectedExerciseId, Number(reps), Number(weight), rpe ? Number(rpe) : undefined)
+      await addSet(
+        session.id,
+        selectedExerciseId,
+        Number(reps),
+        Number(weight),
+        rpe ? Number(rpe) : undefined,
+      )
       setReps('')
       setWeight('')
       setRpe('')
@@ -112,7 +118,9 @@ export default function Treino() {
   }, [sets, sessions, exercises, last7Days])
 
   const habitConsistencyRate =
-    habits.length > 0 ? Math.round((habits.filter((h) => h.is_completed).length / habits.length) * 100) : 0
+    habits.length > 0
+      ? Math.round((habits.filter((h) => h.is_completed).length / habits.length) * 100)
+      : 0
 
   const handleGenerateSuggestion = async () => {
     setLoadingSuggestion(true)
@@ -214,7 +222,13 @@ export default function Treino() {
               </div>
               <div className="space-y-2">
                 <Label>RPE (opcional)</Label>
-                <Input type="number" value={rpe} onChange={(e) => setRpe(e.target.value)} min={1} max={10} />
+                <Input
+                  type="number"
+                  value={rpe}
+                  onChange={(e) => setRpe(e.target.value)}
+                  min={1}
+                  max={10}
+                />
               </div>
             </div>
 
@@ -325,7 +339,11 @@ export default function Treino() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Button onClick={handleGenerateSuggestion} disabled={loadingSuggestion} className="gap-2">
-            {loadingSuggestion ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+            {loadingSuggestion ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Sparkles size={16} />
+            )}
             Gerar Sugestão
           </Button>
 

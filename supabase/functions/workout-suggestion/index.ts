@@ -34,7 +34,9 @@ Rules:
 - Respond in Portuguese.
 - Respond ONLY with valid JSON: {"summary":"...","habits":[{"title":"...","description":"...","frequency":"weekly","dayOfWeek":"Segunda"}]}`
 
-async function getOpenAISuggestion(context: WorkoutSuggestionContext): Promise<WorkoutSuggestion | null> {
+async function getOpenAISuggestion(
+  context: WorkoutSuggestionContext,
+): Promise<WorkoutSuggestion | null> {
   const apiKey = Deno.env.get('OPENAI_API_KEY')
   if (!apiKey) return null
 

@@ -1,10 +1,7 @@
 import { addDays } from '@/lib/date-utils'
 
 /** Consecutive-day streak ending today, tolerating today itself being incomplete. */
-export function computeStreak(
-  activeDates: Set<string>,
-  today: string,
-): number {
+export function computeStreak(activeDates: Set<string>, today: string): number {
   let streak = 0
   let cursor = activeDates.has(today) ? today : addDays(today, -1)
   while (activeDates.has(cursor)) {

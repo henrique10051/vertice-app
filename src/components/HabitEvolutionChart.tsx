@@ -1,4 +1,12 @@
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp } from 'lucide-react'
@@ -16,7 +24,9 @@ export function HabitEvolutionChart({ data }: { data: EvolutionPoint[] }) {
         <p className="text-sm text-muted-foreground">Consistência diária nos últimos 30 dias</p>
       </CardHeader>
       <CardContent className="h-56">
-        <ChartContainer config={{ rate: { label: 'Consistência (%)', color: 'hsl(var(--primary))' } }}>
+        <ChartContainer
+          config={{ rate: { label: 'Consistência (%)', color: 'hsl(var(--primary))' } }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />

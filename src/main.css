@@ -46,7 +46,7 @@
 
     /* Chart palette — teal → amber ascent, cohesive not rainbow */
     --chart-1: 186 74% 34%; /* teal — growth/income */
-    --chart-2: 35 92% 52%;  /* amber — highlight */
+    --chart-2: 35 92% 52%; /* amber — highlight */
     --chart-3: 200 60% 46%; /* glacier blue */
     --chart-4: 158 52% 40%; /* moss */
     --chart-5: 262 45% 56%; /* dusk violet */
@@ -107,7 +107,10 @@
   }
 
   /* Display face carries the personality — used with restraint */
-  h1, h2, h3, .font-display {
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
@@ -122,7 +125,9 @@
   /* Numbers as instrument readouts — tabular mono */
   .data-num {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-feature-settings: 'tnum' 1, 'zero' 1;
+    font-feature-settings:
+      'tnum' 1,
+      'zero' 1;
     letter-spacing: -0.02em;
   }
 
@@ -158,29 +163,64 @@
   }
 
   @keyframes check-pop {
-    0% { transform: scale(0.8); opacity: 0; }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
   .animate-check-pop {
     animation: check-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
   @keyframes pop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.18); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
-  .animate-pop { animation: pop 0.3s ease-out; }
+  .animate-pop {
+    animation: pop 0.3s ease-out;
+  }
 
-  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
   @keyframes fade-in-up {
-    from { transform: translateY(10px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
-  .animate-fade-in { animation: fade-in 0.4s ease-out; }
-  .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out;
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
 
-  .day-has-task { position: relative; }
+  .day-has-task {
+    position: relative;
+  }
   .day-has-task::after {
     content: '';
     position: absolute;

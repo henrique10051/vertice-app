@@ -18,10 +18,7 @@ export function HabitStreakDots({ streak, recentDays }: HabitStreakDotsProps) {
         {recentDays.map((done, i) => (
           <span
             key={i}
-            className={cn(
-              'w-2 h-2 rounded-full',
-              done ? 'bg-amber-500' : 'bg-muted-foreground/20',
-            )}
+            className={cn('w-2 h-2 rounded-full', done ? 'bg-amber-500' : 'bg-muted-foreground/20')}
           />
         ))}
       </div>

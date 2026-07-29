@@ -43,13 +43,21 @@ function decodeEntities(str: string): string {
 }
 
 function stripTags(html: string): string {
-  return decodeEntities(html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim())
+  return decodeEntities(
+    html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  )
 }
 
 function extractTag(xml: string, tag: string): string | null {
   const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'))
   if (!m) return null
-  return m[1].replace(/^<!\[CDATA\[/, '').replace(/\]\]>$/, '').trim()
+  return m[1]
+    .replace(/^<!\[CDATA\[/, '')
+    .replace(/\]\]>$/, '')
+    .trim()
 }
 
 function parseRss(xml: string, source: string): Article[] {
@@ -126,8 +134,7 @@ Deno.serve(async (req: Request) => {
       .eq('category', category)
       .maybeSingle()
 
-    const isFresh =
-      cached && Date.now() - new Date(cached.fetched_at).getTime() < CACHE_TTL_MS
+    const isFresh = cached && Date.now() - new Date(cached.fetched_at).getTime() < CACHE_TTL_MS
 
     if (isFresh) {
       return new Response(JSON.stringify({ articles: cached.articles, cached: true }), {

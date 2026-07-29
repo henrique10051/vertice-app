@@ -18,6 +18,8 @@ interface AgendaContextType {
     due_date: string
     category?: AgendaCategory
     duration_minutes?: number
+    routine_period?: 'morning' | 'afternoon' | 'night' | null
+    tracker_id?: string | null
   }) => Promise<{ error: string | null }>
   updateTask: (id: string, updates: Partial<AgendaTask>) => Promise<void>
   removeTask: (id: string) => Promise<void>
@@ -61,6 +63,8 @@ export const AgendaProvider = ({ children }: { children: ReactNode }) => {
       due_date: string
       category?: AgendaCategory
       duration_minutes?: number
+      routine_period?: 'morning' | 'afternoon' | 'night' | null
+      tracker_id?: string | null
     }) => {
       if (!user) return { error: 'Usuário não autenticado.' }
       const { error } = await createAgendaTask(user.id, task)

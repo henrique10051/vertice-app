@@ -116,7 +116,13 @@ export function GoalFormDialog({
                 </div>
               ))}
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={addSubtaskRow} className="gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addSubtaskRow}
+              className="gap-1"
+            >
               <Plus size={14} /> Adicionar passo
             </Button>
           </div>

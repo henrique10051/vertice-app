@@ -21,12 +21,16 @@ function monthKey(dateStr: string) {
  */
 export function computeMonthlyProjection(transactions: Transaction[]): MonthlyProjection {
   const currentMonth = monthKey(new Date().toISOString())
-  const monthTotals = new Map<string, { income: number; expense: number; categories: Map<string, number> }>()
+  const monthTotals = new Map<
+    string,
+    { income: number; expense: number; categories: Map<string, number> }
+  >()
 
   for (const t of transactions) {
     const key = monthKey(t.date)
     if (key >= currentMonth) continue
-    if (!monthTotals.has(key)) monthTotals.set(key, { income: 0, expense: 0, categories: new Map() })
+    if (!monthTotals.has(key))
+      monthTotals.set(key, { income: 0, expense: 0, categories: new Map() })
     const bucket = monthTotals.get(key)!
     if (t.type === 'income') {
       bucket.income += t.amount
@@ -40,7 +44,13 @@ export function computeMonthlyProjection(transactions: Transaction[]): MonthlyPr
   const monthsUsed = recentMonths.length
 
   if (monthsUsed === 0) {
-    return { projectedIncome: 0, projectedExpense: 0, projectedBalance: 0, monthsUsed: 0, byCategory: [] }
+    return {
+      projectedIncome: 0,
+      projectedExpense: 0,
+      projectedBalance: 0,
+      monthsUsed: 0,
+      byCategory: [],
+    }
   }
 
   let incomeSum = 0

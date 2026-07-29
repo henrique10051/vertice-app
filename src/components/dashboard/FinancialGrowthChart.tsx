@@ -7,7 +7,18 @@ import useFinancesStore from '@/stores/useFinancesStore'
 
 const MONTHS = 6
 const monthNames = [
-  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
 ]
 
 export function FinancialGrowthChart() {
@@ -39,7 +50,11 @@ export function FinancialGrowthChart() {
         0,
       )
       runningBalance += savings
-      return { month: monthNames[month], balance: Math.round(runningBalance), savings: Math.round(savings) }
+      return {
+        month: monthNames[month],
+        balance: Math.round(runningBalance),
+        savings: Math.round(savings),
+      }
     })
   }, [transactions])
 

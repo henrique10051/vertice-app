@@ -25,14 +25,62 @@ const CURATED_QUERIES = [
 // Static fallback so the feature never ships empty if Google Books is down or
 // rate-limited (no API key is used, so quota is shared and can run dry).
 const CURATED_FALLBACK: BookResult[] = [
-  { googleBooksId: null, title: 'Hábitos Atômicos', author: 'James Clear', coverUrl: null, description: 'Um método comprovado para criar bons hábitos e eliminar os maus.' },
-  { googleBooksId: null, title: 'O Poder do Hábito', author: 'Charles Duhigg', coverUrl: null, description: 'Por que fazemos o que fazemos na vida e nos negócios.' },
-  { googleBooksId: null, title: 'Mindset', author: 'Carol Dweck', coverUrl: null, description: 'A nova psicologia do sucesso.' },
-  { googleBooksId: null, title: 'Pai Rico, Pai Pobre', author: 'Robert Kiyosaki', coverUrl: null, description: 'O que os ricos ensinam a seus filhos sobre dinheiro.' },
-  { googleBooksId: null, title: 'O Homem Mais Rico da Babilônia', author: 'George S. Clason', coverUrl: null, description: 'Princípios atemporais de prosperidade financeira.' },
-  { googleBooksId: null, title: 'Essencialismo', author: 'Greg McKeown', coverUrl: null, description: 'A disciplinada busca por menos.' },
-  { googleBooksId: null, title: 'Trabalho Focado', author: 'Cal Newport', coverUrl: null, description: 'Regras para o sucesso em um mundo distraído.' },
-  { googleBooksId: null, title: 'Os 7 Hábitos das Pessoas Altamente Eficazes', author: 'Stephen Covey', coverUrl: null, description: 'Lições poderosas para a mudança pessoal.' },
+  {
+    googleBooksId: null,
+    title: 'Hábitos Atômicos',
+    author: 'James Clear',
+    coverUrl: null,
+    description: 'Um método comprovado para criar bons hábitos e eliminar os maus.',
+  },
+  {
+    googleBooksId: null,
+    title: 'O Poder do Hábito',
+    author: 'Charles Duhigg',
+    coverUrl: null,
+    description: 'Por que fazemos o que fazemos na vida e nos negócios.',
+  },
+  {
+    googleBooksId: null,
+    title: 'Mindset',
+    author: 'Carol Dweck',
+    coverUrl: null,
+    description: 'A nova psicologia do sucesso.',
+  },
+  {
+    googleBooksId: null,
+    title: 'Pai Rico, Pai Pobre',
+    author: 'Robert Kiyosaki',
+    coverUrl: null,
+    description: 'O que os ricos ensinam a seus filhos sobre dinheiro.',
+  },
+  {
+    googleBooksId: null,
+    title: 'O Homem Mais Rico da Babilônia',
+    author: 'George S. Clason',
+    coverUrl: null,
+    description: 'Princípios atemporais de prosperidade financeira.',
+  },
+  {
+    googleBooksId: null,
+    title: 'Essencialismo',
+    author: 'Greg McKeown',
+    coverUrl: null,
+    description: 'A disciplinada busca por menos.',
+  },
+  {
+    googleBooksId: null,
+    title: 'Trabalho Focado',
+    author: 'Cal Newport',
+    coverUrl: null,
+    description: 'Regras para o sucesso em um mundo distraído.',
+  },
+  {
+    googleBooksId: null,
+    title: 'Os 7 Hábitos das Pessoas Altamente Eficazes',
+    author: 'Stephen Covey',
+    coverUrl: null,
+    description: 'Lições poderosas para a mudança pessoal.',
+  },
 ]
 
 function mapVolume(item: any): BookResult | null {

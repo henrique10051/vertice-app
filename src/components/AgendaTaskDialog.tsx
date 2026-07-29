@@ -10,8 +10,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useAgenda } from '@/hooks/use-agenda'
+import { useCustomTrackersStore } from '@/stores/useCustomTrackersStore'
 import { useToast } from '@/hooks/use-toast'
 import type { AgendaCategory, AgendaTask } from '@/services/agenda'
 import { DURATION_OPTIONS } from '@/lib/duration-options'
@@ -54,6 +61,8 @@ export function AgendaTaskDialog({
   onDeleted?: (id: string) => void
 }) {
   const { addTask, updateTask } = useAgenda()
+  const { customTrackers } = useCustomTrackersStore()
+  const trackers = Object.values(customTrackers)
   const { toast } = useToast()
   const isEditing = !!task
   const [title, setTitle] = useState('')
@@ -61,6 +70,7 @@ export function AgendaTaskDialog({
   const [dueDate, setDueDate] = useState(getDefaultDateTime(initialDate))
   const [category, setCategory] = useState<AgendaCategory>('pessoal')
   const [duration, setDuration] = useState(60)
+  const [trackerId, setTrackerId] = useState<string>('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -71,12 +81,14 @@ export function AgendaTaskDialog({
       setDueDate(toDateTimeLocal(task.due_date))
       setCategory(task.category)
       setDuration(task.duration_minutes || 60)
+      setTrackerId(task.tracker_id || '')
     } else {
       setTitle('')
       setDescription('')
       setDueDate(getDefaultDateTime(initialDate))
       setCategory('pessoal')
       setDuration(60)
+      setTrackerId('')
     }
   }, [open, initialDate, task])
 
@@ -90,6 +102,7 @@ export function AgendaTaskDialog({
         due_date: new Date(dueDate).toISOString(),
         category,
         duration_minutes: duration,
+        tracker_id: trackerId === '_none' ? null : trackerId || null,
       })
       setSaving(false)
       setOpen(false)
@@ -101,6 +114,7 @@ export function AgendaTaskDialog({
       due_date: new Date(dueDate).toISOString(),
       category,
       duration_minutes: duration,
+      tracker_id: trackerId === '_none' ? null : trackerId || null,
     })
     setSaving(false)
     if (error) {
@@ -161,23 +175,38 @@ export function AgendaTaskDialog({
               </Select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Duração</Label>
-            <Select
-              value={String(duration)}
-              onValueChange={(v) => setDuration(Number(v))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DURATION_OPTIONS.map((d) => (
-                  <SelectItem key={d.value} value={String(d.value)}>
-                    {d.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Duração</Label>
+              <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DURATION_OPTIONS.map((d) => (
+                    <SelectItem key={d.value} value={String(d.value)}>
+                      {d.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Rastreador Customizado</Label>
+              <Select value={trackerId || '_none'} onValueChange={(v) => setTrackerId(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Nenhum</SelectItem>
+                  {trackers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <DialogFooter className="flex items-center sm:justify-between">

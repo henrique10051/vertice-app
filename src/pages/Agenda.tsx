@@ -4,14 +4,40 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { AgendaTaskDialog, AGENDA_CATEGORIES, DURATION_OPTIONS } from '@/components/AgendaTaskDialog'
+import {
+  AgendaTaskDialog,
+  AGENDA_CATEGORIES,
+  DURATION_OPTIONS,
+} from '@/components/AgendaTaskDialog'
 import { useAgenda } from '@/hooks/use-agenda'
 import useHabitsStore from '@/stores/useHabitsStore'
 import { dateToStr } from '@/lib/date-utils'
-import { Plus, ArrowLeft, ChevronLeft, ChevronRight, Trash2, Search, Repeat, Loader2, Save } from 'lucide-react'
+import {
+  Plus,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  Search,
+  Repeat,
+  Loader2,
+  Save,
+} from 'lucide-react'
 import {
   format,
   isSameDay,
@@ -33,7 +59,10 @@ import type { Habit } from '@/stores/useHabitsStore'
 
 type EntryCategory = AgendaCategory | 'habito'
 
-const CATEGORY_STYLES: Record<EntryCategory, { bg: string; border: string; text: string; badge: string }> = {
+const CATEGORY_STYLES: Record<
+  EntryCategory,
+  { bg: string; border: string; text: string; badge: string }
+> = {
   pessoal: {
     bg: 'bg-violet-500/10 hover:bg-violet-500/15',
     border: 'border-l-violet-500',
@@ -125,7 +154,13 @@ function EventCard({
         className="mt-0.5 shrink-0"
       />
       <div className="flex-1 min-w-0">
-        <p className={cn('text-xs font-semibold leading-tight flex items-center gap-1', style.text, entry.completed && 'line-through')}>
+        <p
+          className={cn(
+            'text-xs font-semibold leading-tight flex items-center gap-1',
+            style.text,
+            entry.completed && 'line-through',
+          )}
+        >
           {entry.endTime ? `${entry.time}–${entry.endTime}` : entry.time}
           {entry.kind === 'habit' && <Repeat size={10} />}
         </p>
@@ -269,7 +304,8 @@ export default function AgendaPage() {
     const matchesFilters = (title: string, category: EntryCategory, completed: boolean) => {
       if (term && !title.toLowerCase().includes(term)) return false
       if (categoryFilter !== 'all' && category !== categoryFilter) return false
-      if (statusFilter !== 'all' && (completed ? 'completed' : 'pending') !== statusFilter) return false
+      if (statusFilter !== 'all' && (completed ? 'completed' : 'pending') !== statusFilter)
+        return false
       return true
     }
 
@@ -483,7 +519,12 @@ export default function AgendaPage() {
                     >
                       {hourEntries.map((e) => (
                         <div key={`${e.kind}-${e.id}`} onClick={(ev) => ev.stopPropagation()}>
-                          <EventCard entry={e} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} />
+                          <EventCard
+                            entry={e}
+                            onToggle={handleToggle}
+                            onDelete={handleDelete}
+                            onEdit={handleEdit}
+                          />
                         </div>
                       ))}
                     </div>
@@ -506,12 +547,7 @@ export default function AgendaPage() {
                     <p className="text-[10px] font-semibold text-muted-foreground">
                       {DAY_LABELS[i]}
                     </p>
-                    <p
-                      className={cn(
-                        'text-sm font-bold',
-                        isToday(day) && 'text-primary',
-                      )}
-                    >
+                    <p className={cn('text-sm font-bold', isToday(day) && 'text-primary')}>
                       {format(day, 'd')}
                     </p>
                   </div>
@@ -527,7 +563,13 @@ export default function AgendaPage() {
                   >
                     {entriesForDay(day).map((e) => (
                       <div key={`${e.kind}-${e.id}`} onClick={(ev) => ev.stopPropagation()}>
-                        <EventCard entry={e} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} compact />
+                        <EventCard
+                          entry={e}
+                          onToggle={handleToggle}
+                          onDelete={handleDelete}
+                          onEdit={handleEdit}
+                          compact
+                        />
                       </div>
                     ))}
                   </div>
@@ -621,7 +663,11 @@ export default function AgendaPage() {
         open={habitDialogOpen}
         setOpen={setHabitDialogOpen}
         onSave={(time, durationMinutes) => {
-          if (editingHabit) updateHabit(editingHabit.id, { scheduled_time: time, duration_minutes: durationMinutes })
+          if (editingHabit)
+            updateHabit(editingHabit.id, {
+              scheduled_time: time,
+              duration_minutes: durationMinutes,
+            })
         }}
       />
     </div>

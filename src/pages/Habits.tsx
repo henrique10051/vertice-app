@@ -56,7 +56,10 @@ export default function Habits() {
     return historyDays.map((date) => {
       const count = habitLogsByDate[date]?.length || 0
       const rate = habits.length > 0 ? Math.round((count / habits.length) * 100) : 0
-      const label = strToDate(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+      const label = strToDate(date).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+      })
       return { date, label, rate }
     })
   }, [historyDays, habitLogsByDate, habits.length])

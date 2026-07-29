@@ -30,7 +30,9 @@ const STATUS_LABELS: Record<ReadingStatus, string> = {
 
 function NewsTab() {
   const [category, setCategory] = useState<NewsCategory>('desenvolvimento_pessoal')
-  const [articlesByCategory, setArticlesByCategory] = useState<Partial<Record<NewsCategory, Article[]>>>({})
+  const [articlesByCategory, setArticlesByCategory] = useState<
+    Partial<Record<NewsCategory, Article[]>>
+  >({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

@@ -11,6 +11,8 @@ export interface AgendaTask {
   duration_minutes: number
   status: 'pending' | 'completed'
   category: AgendaCategory
+  routine_period?: 'morning' | 'afternoon' | 'night' | null
+  tracker_id?: string | null
   created_at: string
 }
 
@@ -31,6 +33,8 @@ export async function createAgendaTask(
     due_date: string
     category?: AgendaCategory
     duration_minutes?: number
+    routine_period?: 'morning' | 'afternoon' | 'night' | null
+    tracker_id?: string | null
   },
 ) {
   const { data, error } = await supabase
@@ -42,6 +46,8 @@ export async function createAgendaTask(
       due_date: task.due_date,
       category: task.category || 'pessoal',
       duration_minutes: task.duration_minutes || 60,
+      routine_period: task.routine_period || null,
+      tracker_id: task.tracker_id || null,
       status: 'pending',
     })
     .select()
