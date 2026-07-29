@@ -36,7 +36,6 @@ import UpdatePassword from '@/pages/UpdatePassword'
 import AgendaPage from '@/pages/Agenda'
 import Treino from '@/pages/Treino'
 import Leitura from '@/pages/Leitura'
-import Rotinas from '@/pages/Rotinas'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -124,7 +123,6 @@ const App = () => (
                             >
                               <Route path="/" element={<Index />} />
                               <Route path="/habitos" element={<Habits />} />
-                              <Route path="/rotinas" element={<Rotinas />} />
                               <Route path="/objetivos" element={<Goals />} />
                               <Route path="/financas" element={<Finances />} />
                               <Route path="/mercado" element={<Mercado />} />

@@ -5,13 +5,11 @@ import {
   Wallet,
   CalendarDays,
   User,
-  SunMoon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { path: '/', label: 'Início', icon: LayoutDashboard },
-  { path: '/rotinas', label: 'Rotina', icon: SunMoon },
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
   { path: '/agenda', label: 'Agenda', icon: CalendarDays },
   { path: '/financas', label: 'Finanças', icon: Wallet },

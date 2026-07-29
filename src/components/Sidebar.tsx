@@ -15,14 +15,12 @@ import {
   CalendarDays,
   Dumbbell,
   BookOpen,
-  SunMoon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useMainStore from '@/stores/main'
 
 const navItems = [
   { path: '/', label: 'Início', icon: LayoutDashboard },
-  { path: '/rotinas', label: 'Rotina', icon: SunMoon },
   { path: '/habitos', label: 'Hábitos', icon: ListChecks },
   { path: '/agenda', label: 'Agenda', icon: CalendarDays },
   { path: '/objetivos', label: 'Objetivos', icon: Target },
