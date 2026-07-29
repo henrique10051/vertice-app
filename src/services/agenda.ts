@@ -13,6 +13,8 @@ export interface AgendaTask {
   category: AgendaCategory
   routine_period?: 'morning' | 'afternoon' | 'night' | null
   tracker_id?: string | null
+  is_recurring?: boolean
+  days_of_week?: string[]
   created_at: string
 }
 
@@ -35,6 +37,8 @@ export async function createAgendaTask(
     duration_minutes?: number
     routine_period?: 'morning' | 'afternoon' | 'night' | null
     tracker_id?: string | null
+    is_recurring?: boolean
+    days_of_week?: string[]
   },
 ) {
   const { data, error } = await supabase
@@ -48,6 +52,8 @@ export async function createAgendaTask(
       duration_minutes: task.duration_minutes || 60,
       routine_period: task.routine_period || null,
       tracker_id: task.tracker_id || null,
+      is_recurring: task.is_recurring ?? false,
+      days_of_week: task.days_of_week ?? [],
       status: 'pending',
     })
     .select()

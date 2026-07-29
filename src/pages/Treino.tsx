@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import useWorkoutStore from '@/stores/useWorkoutStore'
 import useHabitsStore from '@/stores/useHabitsStore'
 import useGoalsStore from '@/stores/useGoalsStore'
@@ -18,9 +28,27 @@ import { fetchWorkoutSuggestion } from '@/services/workout-suggestion'
 import { WEEKDAYS } from '@/lib/workout-suggestion-fallback'
 import { addDays, getTodayStr, strToDate } from '@/lib/date-utils'
 import { useToast } from '@/hooks/use-toast'
-import { Dumbbell, Plus, Sparkles, Trash2, Loader2, CalendarClock, Check } from 'lucide-react'
+import {
+  Dumbbell,
+  Plus,
+  Sparkles,
+  Trash2,
+  Loader2,
+  CalendarClock,
+  Check,
+  Video,
+  ExternalLink,
+  Play,
+  Upload,
+  X,
+  FileVideo,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react'
 
 export default function Treino() {
+  const { user } = useAuth()
   const {
     exercises,
     sessions,
@@ -43,6 +71,24 @@ export default function Treino() {
   const [newExerciseName, setNewExerciseName] = useState('')
   const [savingSet, setSavingSet] = useState(false)
 
+  // Advanced Exercise States
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [exerciseName, setExerciseName] = useState('')
+  const [muscleGroup, setMuscleGroup] = useState('Peito')
+  const [videoUrlInput, setVideoUrlInput] = useState('')
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [creatingExercise, setCreatingExercise] = useState(false)
+
+  // Video expand/collapse
+  const [videoExpanded, setVideoExpanded] = useState(false)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const selectedExercise = useMemo(() => {
+    return exercises.find((e) => e.id === selectedExerciseId)
+  }, [exercises, selectedExerciseId])
+
   const [suggestion, setSuggestion] = useState<Awaited<
     ReturnType<typeof fetchWorkoutSuggestion>
   > | null>(null)
@@ -55,6 +101,104 @@ export default function Treino() {
 
   const chartExerciseId = selectedExerciseId || exercises[0]?.id || ''
   const chartExercise = exercises.find((e) => e.id === chartExerciseId)
+
+  const getYoutubeEmbedUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const match = url.match(regExp)
+    const videoId = match && match[2].length === 11 ? match[2] : null
+
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`
+    }
+
+    if (url.includes('/shorts/')) {
+      const shortsMatch = url.split('/shorts/')[1]?.split('?')[0]
+      if (shortsMatch) {
+        return `https://www.youtube.com/embed/${shortsMatch}`
+      }
+    }
+
+    return null
+  }
+
+  const handleUploadVideo = async (file: File): Promise<string | null> => {
+    if (!user) return null
+    setUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${crypto.randomUUID()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('exercise-videos')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage
+        .from('exercise-videos')
+        .getPublicUrl(filePath)
+
+      return data.publicUrl
+    } catch (err: any) {
+      toast({
+        title: 'Erro no upload',
+        description: err.message || 'Não foi possível fazer o upload do vídeo.',
+        variant: 'destructive',
+      })
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleCreateAdvancedExercise = async () => {
+    if (!exerciseName.trim()) {
+      toast({
+        title: 'Nome obrigatório',
+        description: 'Dê um nome para o exercício.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setCreatingExercise(true)
+    try {
+      let finalVideoUrl = videoUrlInput.trim() || null
+
+      if (videoFile) {
+        const uploadedUrl = await handleUploadVideo(videoFile)
+        if (uploadedUrl) {
+          finalVideoUrl = uploadedUrl
+        } else {
+          setCreatingExercise(false)
+          return
+        }
+      }
+
+      const created = await addExercise(exerciseName.trim(), muscleGroup, finalVideoUrl)
+      if (created) {
+        setSelectedExerciseId(created.id)
+        setExerciseName('')
+        setVideoUrlInput('')
+        setVideoFile(null)
+        setDialogOpen(false)
+        toast({
+          title: 'Exercício criado!',
+          description: `"${created.name}" foi adicionado com sucesso.`,
+        })
+      }
+    } catch {
+      toast({
+        title: 'Erro ao criar',
+        description: 'Não foi possível salvar o exercício.',
+        variant: 'destructive',
+      })
+    } finally {
+      setCreatingExercise(false)
+    }
+  }
 
   const evolutionData = useMemo(() => {
     if (!chartExerciseId) return []
@@ -96,13 +240,21 @@ export default function Treino() {
     setSavingSet(false)
   }
 
-  const handleAddExercise = async () => {
-    if (!newExerciseName.trim()) return
-    const created = await addExercise(newExerciseName.trim())
-    if (created) {
-      setSelectedExerciseId(created.id)
+  const handleAddExerciseClick = () => {
+    if (newExerciseName.trim()) {
+      setExerciseName(newExerciseName.trim())
       setNewExerciseName('')
+    } else {
+      setExerciseName('')
     }
+    setMuscleGroup('Peito')
+    setVideoUrlInput('')
+    setVideoFile(null)
+    setDialogOpen(true)
+  }
+
+  const handleAddExercise = async () => {
+    handleAddExerciseClick()
   }
 
   const last7Days = addDays(today, -7)
@@ -210,6 +362,89 @@ export default function Treino() {
                 </Button>
               </div>
             </div>
+
+            {/* Exercise Demo Video Player */}
+            {selectedExercise && selectedExercise.video_url && (
+              <div className="border border-border/50 rounded-xl p-3 bg-muted/10 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-xs font-semibold text-foreground/80">
+                    <Video size={14} className="text-primary animate-pulse" />
+                    Guia de Execução do Exercício
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-primary hover:text-primary/80 flex items-center gap-1.5 px-2 hover:bg-primary/5 rounded-full"
+                    onClick={() => setVideoExpanded(!videoExpanded)}
+                  >
+                    {videoExpanded ? (
+                      <>
+                        Ocultar Vídeo <ChevronUp size={12} />
+                      </>
+                    ) : (
+                      <>
+                        Ver Vídeo <ChevronDown size={12} />
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {videoExpanded && (
+                  <div className="rounded-lg overflow-hidden border border-border/60 bg-black/5 animate-in slide-in-from-top-1 duration-200">
+                    {(() => {
+                      const embedUrl = getYoutubeEmbedUrl(selectedExercise.video_url)
+                      if (embedUrl) {
+                        return (
+                          <div className="aspect-video w-full">
+                            <iframe
+                              src={embedUrl}
+                              title={`Como fazer ${selectedExercise.name}`}
+                              className="w-full h-full border-none"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              allowFullScreen
+                            />
+                          </div>
+                        )
+                      }
+
+                      const isDirectVideo =
+                        selectedExercise.video_url?.includes('supabase.co/storage') ||
+                        /\.(mp4|webm|ogg)/i.test(selectedExercise.video_url || '')
+
+                      if (isDirectVideo) {
+                        return (
+                          <div className="aspect-video w-full flex bg-black">
+                            <video
+                              src={selectedExercise.video_url || ''}
+                              controls
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <div className="p-4 flex flex-col items-center justify-center text-center space-y-3 bg-muted/30">
+                          <Play size={24} className="text-primary/70" />
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-bold">Demonstração Externa</p>
+                            <p className="text-[11px] text-muted-foreground">Esta demonstração está hospedada em uma plataforma externa.</p>
+                          </div>
+                          <a
+                            href={selectedExercise.video_url || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-full hover:bg-primary/95 transition-all shadow-soft"
+                          >
+                            Abrir Vídeo Externo <ExternalLink size={12} />
+                          </a>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
@@ -374,6 +609,158 @@ export default function Treino() {
           )}
         </CardContent>
       </Card>
+
+      {/* Advanced Create Exercise Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Dumbbell size={20} className="text-primary" />
+              Criar Novo Exercício
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            <div className="space-y-2">
+              <Label htmlFor="adv-ex-name">Nome do Exercício *</Label>
+              <Input
+                id="adv-ex-name"
+                placeholder="Ex: Agachamento Búlgaro, Crossover"
+                value={exerciseName}
+                onChange={(e) => setExerciseName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="adv-ex-muscle">Grupo Muscular</Label>
+              <Select value={muscleGroup} onValueChange={setMuscleGroup}>
+                <SelectTrigger id="adv-ex-muscle">
+                  <SelectValue placeholder="Selecione o grupo muscular" />
+                </SelectTrigger>
+                <SelectContent>
+                  {['Peito', 'Costas', 'Pernas', 'Ombro', 'Bíceps', 'Tríceps', 'Core', 'Posterior', 'Outro'].map((group) => (
+                    <SelectItem key={group} value={group}>
+                      {group}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Vídeo Demonstrativo / Execução (Opcional)</Label>
+              
+              <Tabs defaultValue="link" className="w-full border rounded-xl overflow-hidden p-1 bg-background/50 border-border/40">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="link" className="text-xs py-1.5">Link Web</TabsTrigger>
+                  <TabsTrigger value="upload" className="text-xs py-1.5">Fazer Upload</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="link" className="p-3 space-y-2 bg-background/20">
+                  <Label htmlFor="adv-ex-link" className="text-[11px] text-muted-foreground">Cole o link do YouTube, Shorts, Instagram ou TikTok</Label>
+                  <Input
+                    id="adv-ex-link"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={videoUrlInput}
+                    onChange={(e) => {
+                      setVideoUrlInput(e.target.value)
+                      setVideoFile(null)
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="upload" className="p-3 space-y-2 bg-background/20">
+                  <Label className="text-[11px] text-muted-foreground">Faça o upload do seu próprio vídeo (.mp4 ou .mov, máx 50MB)</Label>
+                  
+                  {videoFile ? (
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-primary/20 bg-primary/5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileVideo size={18} className="text-primary shrink-0" />
+                        <span className="text-xs font-medium truncate max-w-[200px]">{videoFile.name}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-6 h-6 hover:bg-primary/10 rounded-full"
+                        onClick={() => {
+                          setVideoFile(null)
+                          if (fileInputRef.current) fileInputRef.current.value = ''
+                        }}
+                      >
+                        <X size={14} />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-border/70 hover:border-primary/50 rounded-lg p-5 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-muted/30 transition-all text-center"
+                    >
+                      <Upload size={22} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-semibold">Clique para selecionar</p>
+                        <p className="text-[10px] text-muted-foreground">Arraste um vídeo ou selecione da galeria</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        if (file.size > 52428800) {
+                          toast({
+                            title: 'Arquivo muito grande',
+                            description: 'O vídeo não deve passar de 50MB.',
+                            variant: 'destructive',
+                          })
+                          return
+                        }
+                        setVideoFile(file)
+                        setVideoUrlInput('')
+                      }
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDialogOpen(false)
+                setVideoFile(null)
+                setVideoUrlInput('')
+              }}
+              disabled={creatingExercise || uploading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateAdvancedExercise}
+              disabled={creatingExercise || uploading}
+              className="gap-1.5"
+            >
+              {creatingExercise || uploading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  {uploading ? 'Enviando vídeo...' : 'Salvando...'}
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={16} />
+                  Criar Exercício
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

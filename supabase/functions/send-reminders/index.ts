@@ -112,9 +112,10 @@ Deno.serve(async (req: Request) => {
       }).format(now)
 
       const { data: habits } = await serviceClient
-        .from('habits')
-        .select('id, user_id, title, scheduled_time')
+        .from('custom_trackers')
+        .select('id, user_id, name, scheduled_time')
         .in('user_id', userIds)
+        .eq('is_habit', true)
         .not('scheduled_time', 'is', null)
 
       for (const habit of habits || []) {
@@ -122,9 +123,9 @@ Deno.serve(async (req: Request) => {
         if (habitTime !== localTime) continue
 
         const { data: doneToday } = await serviceClient
-          .from('habit_logs')
+          .from('custom_tracker_entries')
           .select('id')
-          .eq('habit_id', habit.id)
+          .eq('tracker_id', habit.id)
           .eq('date', new Date().toISOString().slice(0, 10))
           .maybeSingle()
         if (doneToday) continue
@@ -136,7 +137,7 @@ Deno.serve(async (req: Request) => {
           serviceClient,
           habit.user_id,
           'Hora do hábito',
-          `Não esqueça: "${habit.title}".`,
+          `Não esqueça: "${habit.name}".`,
           '/habitos',
         )
         sent++

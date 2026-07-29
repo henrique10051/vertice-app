@@ -22,6 +22,9 @@ import { useAgenda } from '@/hooks/use-agenda'
 import { useCustomTrackersStore } from '@/stores/useCustomTrackersStore'
 import { TrackerLogDialog } from '@/components/TrackerLogDialog'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { getTodayStr, addDays, formatDateLongPT } from '@/lib/date-utils'
 import {
   Sun,
@@ -83,8 +86,16 @@ const CATEGORY_DETAILS: Record<
 }
 
 export default function Rotinas() {
+  const { user } = useAuth()
   const { tasks, addTask, updateTask, removeTask, toggleTask } = useAgenda()
-  const { customTrackers, trackerEntries } = useCustomTrackersStore()
+  const {
+    customTrackers,
+    trackerEntries,
+    addCustomTracker,
+    addTrackerEntry,
+    deleteTrackerEntry,
+    syncWithBackend,
+  } = useCustomTrackersStore()
   const trackers = Object.values(customTrackers)
   const logs = Object.values(trackerEntries).flat()
   const { toast } = useToast()
@@ -101,24 +112,81 @@ export default function Rotinas() {
   const [trackerId, setTrackerId] = useState<string>('')
   const [saving, setSaving] = useState(false)
 
+  // Recurrence & Tracker Auto-create states
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [daysOfWeek, setDaysOfWeek] = useState<string[]>(['monday', 'tuesday', 'wednesday', 'thursday', 'friday'])
+  const [createTrackerAuto, setCreateTrackerAuto] = useState(true)
+
   // Tracker Log Dialog state
   const [logDialogOpen, setLogDialogOpen] = useState(false)
   const [activeLogTaskId, setActiveLogTaskId] = useState<string | null>(null)
   const [activeLogTrackerId, setActiveLogTrackerId] = useState<string | null>(null)
 
-  const handleToggleTask = (task: AgendaTask) => {
-    if (task.tracker_id && task.status === 'pending') {
-      setActiveLogTaskId(task.id)
-      setActiveLogTrackerId(task.tracker_id)
-      setLogDialogOpen(true)
+  const handleToggleTask = async (task: AgendaTask) => {
+    if (task.tracker_id) {
+      const tracker = customTrackers[task.tracker_id]
+      const hasFields = tracker && tracker.validation && tracker.validation.length > 0
+
+      const isCompleted = (() => {
+        if (task.is_recurring) {
+          const entries = trackerEntries[task.tracker_id] || []
+          return entries.some((e) => e.task_id === task.id && e.date === selectedDate)
+        }
+        return task.status === 'completed'
+      })()
+
+      if (isCompleted) {
+        // Toggle off: delete entry
+        const entries = trackerEntries[task.tracker_id] || []
+        const entryToDelete = entries.find((e) => e.task_id === task.id && e.date === selectedDate)
+        if (entryToDelete) {
+          await deleteTrackerEntry(task.tracker_id, entryToDelete.id)
+          if (!task.is_recurring) {
+            await toggleTask(task.id, task.status)
+          }
+          if (user) {
+            await syncWithBackend(user.id)
+          }
+        }
+      } else {
+        // Toggle on: complete
+        if (hasFields) {
+          setActiveLogTaskId(task.id)
+          setActiveLogTrackerId(task.tracker_id)
+          setLogDialogOpen(true)
+        } else {
+          await addTrackerEntry(task.tracker_id, {
+            task_id: task.id,
+            date: selectedDate,
+            values: { is_completed: true },
+          })
+          if (!task.is_recurring) {
+            await toggleTask(task.id, task.status)
+          }
+          if (user) {
+            await syncWithBackend(user.id)
+          }
+        }
+      }
     } else {
       toggleTask(task.id, task.status)
     }
   }
 
-  // Filter tasks for the selected date
+  // Filter tasks for the selected date (considering Day of Week for recurring tasks)
   const dateTasks = useMemo(() => {
-    return tasks.filter((t) => t.due_date.split('T')[0] === selectedDate)
+    const dayOfWeek = (() => {
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+      const date = new Date(selectedDate + 'T00:00:00')
+      return days[date.getDay()]
+    })()
+
+    return tasks.filter((t) => {
+      if (t.is_recurring) {
+        return t.days_of_week?.includes(dayOfWeek)
+      }
+      return t.due_date.split('T')[0] === selectedDate
+    })
   }, [tasks, selectedDate])
 
   // Split tasks by period
@@ -138,9 +206,16 @@ export default function Rotinas() {
 
   // Stats calculation
   const totalRoutineTasks = morningTasks.length + afternoonTasks.length + nightTasks.length
-  const completedRoutineTasks = [...morningTasks, ...afternoonTasks, ...nightTasks].filter(
-    (t) => t.status === 'completed',
-  ).length
+  const completedRoutineTasks = [...morningTasks, ...afternoonTasks, ...nightTasks].filter((t) => {
+    if (t.is_recurring) {
+      if (t.tracker_id) {
+        const entries = trackerEntries[t.tracker_id] || []
+        return entries.some((e) => e.task_id === t.id && e.date === selectedDate)
+      }
+      return false
+    }
+    return t.status === 'completed'
+  }).length
 
   const completionPercent =
     totalRoutineTasks > 0 ? Math.round((completedRoutineTasks / totalRoutineTasks) * 100) : 0
@@ -151,6 +226,9 @@ export default function Rotinas() {
     setDescription('')
     setCategory('pessoal')
     setTrackerId('')
+    setIsRecurring(false)
+    setDaysOfWeek(['monday', 'tuesday', 'wednesday', 'thursday', 'friday'])
+    setCreateTrackerAuto(true)
     setIsOpen(true)
   }
 
@@ -166,13 +244,32 @@ export default function Rotinas() {
 
     setSaving(true)
     try {
+      let finalTrackerId = trackerId || null
+
+      // Automatically create tracker (habit) if selected and recurring
+      if (isRecurring && createTrackerAuto && !trackerId) {
+        const newTracker = await addCustomTracker({
+          name: title.trim(),
+          is_habit: true,
+          frequency: 'daily',
+          validation: [],
+          view_type: 'card',
+        })
+        finalTrackerId = newTracker.id
+        if (user) {
+          await syncWithBackend(user.id)
+        }
+      }
+
       const { error } = await addTask({
         title: title.trim(),
         description: description.trim() || undefined,
         due_date: new Date(selectedDate).toISOString(),
         category,
         routine_period: targetPeriod,
-        tracker_id: trackerId || null,
+        tracker_id: finalTrackerId,
+        is_recurring: isRecurring,
+        days_of_week: isRecurring ? daysOfWeek : [],
       })
 
       if (error) {
@@ -184,9 +281,11 @@ export default function Rotinas() {
       } else {
         toast({
           title: 'Tarefa adicionada!',
-          description: `Nova tarefa adicionada à sua rotina da ${
-            targetPeriod === 'morning' ? 'Manhã' : targetPeriod === 'afternoon' ? 'Tarde' : 'Noite'
-          }.`,
+          description: isRecurring
+            ? 'Nova rotina recorrente semanal criada com sucesso.'
+            : `Nova tarefa adicionada à sua rotina da ${
+                targetPeriod === 'morning' ? 'Manhã' : targetPeriod === 'afternoon' ? 'Tarde' : 'Noite'
+              }.`,
         })
         setIsOpen(false)
       }
@@ -315,6 +414,8 @@ export default function Rotinas() {
                   onDelete={() => removeTask(task.id)}
                   trackers={trackers}
                   logs={logs}
+                  selectedDate={selectedDate}
+                  trackerEntries={trackerEntries}
                 />
               ))
             ) : (
@@ -361,6 +462,8 @@ export default function Rotinas() {
                   onDelete={() => removeTask(task.id)}
                   trackers={trackers}
                   logs={logs}
+                  selectedDate={selectedDate}
+                  trackerEntries={trackerEntries}
                 />
               ))
             ) : (
@@ -406,6 +509,8 @@ export default function Rotinas() {
                   onDelete={() => removeTask(task.id)}
                   trackers={trackers}
                   logs={logs}
+                  selectedDate={selectedDate}
+                  trackerEntries={trackerEntries}
                 />
               ))
             ) : (
@@ -579,6 +684,75 @@ export default function Rotinas() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Recurrent / Routine Switch */}
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-muted/20">
+              <div className="space-y-0.5">
+                <Label htmlFor="is-recurring" className="text-sm font-semibold cursor-pointer">Repetir semanalmente</Label>
+                <p className="text-[10px] text-muted-foreground">Repetir esta tarefa nos dias selecionados</p>
+              </div>
+              <Switch
+                id="is-recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+
+            {/* Days of week selector if recurring */}
+            {isRecurring && (
+              <div className="space-y-2.5 p-3 rounded-lg border border-border/50 bg-muted/10 animate-in fade-in duration-200">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Dias da semana</Label>
+                <div className="flex justify-between gap-1">
+                  {[
+                    { key: 'monday', label: 'S' },
+                    { key: 'tuesday', label: 'T' },
+                    { key: 'wednesday', label: 'Q' },
+                    { key: 'thursday', label: 'Q' },
+                    { key: 'friday', label: 'S' },
+                    { key: 'saturday', label: 'S' },
+                    { key: 'sunday', label: 'D' },
+                  ].map((day) => {
+                    const isSelected = daysOfWeek.includes(day.key)
+                    return (
+                      <button
+                        key={day.key}
+                        type="button"
+                        onClick={() => {
+                          setDaysOfWeek((prev) =>
+                            prev.includes(day.key)
+                              ? prev.filter((d) => d !== day.key)
+                              : [...prev, day.key],
+                          )
+                        }}
+                        className={cn(
+                          'w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center border transition-all',
+                          isSelected
+                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                            : 'bg-background hover:bg-muted border-border text-muted-foreground',
+                        )}
+                        title={day.key}
+                      >
+                        {day.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Auto tracker checkbox */}
+                {!trackerId && (
+                  <div className="flex items-center gap-2 pt-1.5 border-t border-border/40 mt-1.5">
+                    <Checkbox
+                      id="auto-tracker"
+                      checked={createTrackerAuto}
+                      onCheckedChange={(checked) => setCreateTrackerAuto(!!checked)}
+                    />
+                    <Label htmlFor="auto-tracker" className="text-xs text-muted-foreground cursor-pointer font-medium">
+                      Criar hábito/rastreador automaticamente
+                    </Label>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsOpen(false)} disabled={saving}>
@@ -607,19 +781,29 @@ function TaskCard({
   onDelete,
   trackers = [],
   logs = [],
+  selectedDate,
+  trackerEntries,
 }: {
   task: AgendaTask
   onToggle: () => void
   onDelete: () => void
   trackers?: CustomTracker[]
   logs?: CustomTrackerEntry[]
+  selectedDate?: string
+  trackerEntries?: Record<string, CustomTrackerEntry[]>
 }) {
-  const isCompleted = task.status === 'completed'
+  const isCompleted = (() => {
+    if (task.is_recurring && task.tracker_id && selectedDate && trackerEntries) {
+      const entries = trackerEntries[task.tracker_id] || []
+      return entries.some((e) => e.task_id === task.id && e.date === selectedDate)
+    }
+    return task.status === 'completed'
+  })()
   const cat = CATEGORY_DETAILS[task.category] || CATEGORY_DETAILS.outro
   const CatIcon = cat.icon
 
   const associatedTracker = trackers.find((t) => t.id === task.tracker_id)
-  const associatedLog = logs.find((l) => l.task_id === task.id)
+  const associatedLog = logs.find((l) => l.task_id === task.id && l.date === selectedDate)
 
   return (
     <div

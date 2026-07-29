@@ -20,6 +20,8 @@ interface AgendaContextType {
     duration_minutes?: number
     routine_period?: 'morning' | 'afternoon' | 'night' | null
     tracker_id?: string | null
+    is_recurring?: boolean
+    days_of_week?: string[]
   }) => Promise<{ error: string | null }>
   updateTask: (id: string, updates: Partial<AgendaTask>) => Promise<void>
   removeTask: (id: string) => Promise<void>
@@ -65,6 +67,8 @@ export const AgendaProvider = ({ children }: { children: ReactNode }) => {
       duration_minutes?: number
       routine_period?: 'morning' | 'afternoon' | 'night' | null
       tracker_id?: string | null
+      is_recurring?: boolean
+      days_of_week?: string[]
     }) => {
       if (!user) return { error: 'Usuário não autenticado.' }
       const { error } = await createAgendaTask(user.id, task)

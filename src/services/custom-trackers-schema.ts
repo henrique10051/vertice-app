@@ -32,6 +32,13 @@ export interface CustomTracker {
   view_type: 'card' | 'list' | 'table'
   created_at: string
   updated_at: string
+  
+  // Unified Habit properties
+  is_habit?: boolean
+  frequency?: 'daily' | 'weekly'
+  scheduled_time?: string | null
+  duration_minutes?: number
+  description?: string
 }
 
 export interface CustomTrackerEntry {

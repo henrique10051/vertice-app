@@ -112,10 +112,11 @@ Deno.serve(async (req: Request) => {
       }
 
       const { data: habits } = await serviceClient
-        .from('habits')
-        .select('id, title')
+        .from('custom_trackers')
+        .select('id, name')
         .eq('user_id', userId)
-        .ilike('title', `%${habitName}%`)
+        .eq('is_habit', true)
+        .ilike('name', `%${habitName}%`)
 
       if (!habits || habits.length === 0) {
         return new Response(
@@ -132,10 +133,10 @@ Deno.serve(async (req: Request) => {
       const habit = habits[0]
 
       const { data: existingLog } = await serviceClient
-        .from('habit_logs')
+        .from('custom_tracker_entries')
         .select('id')
         .eq('user_id', userId)
-        .eq('habit_id', habit.id)
+        .eq('tracker_id', habit.id)
         .eq('date', today)
         .maybeSingle()
 
@@ -143,17 +144,19 @@ Deno.serve(async (req: Request) => {
         return new Response(
           JSON.stringify({
             success: true,
-            message: formatWhatsAppResponse(`O hábito "${habit.title}" já foi concluído hoje! 💪`),
+            message: formatWhatsAppResponse(`O hábito "${habit.name}" já foi concluído hoje! 💪`),
           }),
           { headers: { 'Content-Type': 'application/json', ...corsHeaders } },
         )
       }
 
-      const { error: logError } = await serviceClient.from('habit_logs').insert({
+      const { error: logError } = await serviceClient.from('custom_tracker_entries').insert({
         user_id: userId,
-        habit_id: habit.id,
+        tracker_id: habit.id,
         date: today,
-        completed_at: new Date().toISOString(),
+        values: { is_completed: true },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
 
       if (logError) {
@@ -166,13 +169,11 @@ Deno.serve(async (req: Request) => {
         )
       }
 
-      await serviceClient.from('habits').update({ is_completed: true }).eq('id', habit.id)
-
       return new Response(
         JSON.stringify({
           success: true,
           message: formatWhatsAppResponse(
-            `Hábito "${habit.title}" concluído com sucesso! 🎉 Continue assim!`,
+            `Hábito "${habit.name}" concluído com sucesso! 🎉 Continue assim!`,
           ),
         }),
         { headers: { 'Content-Type': 'application/json', ...corsHeaders } },
@@ -198,12 +199,14 @@ Deno.serve(async (req: Request) => {
         )
       }
 
-      const { error: insertError } = await serviceClient.from('habits').insert({
+      const { error: insertError } = await serviceClient.from('custom_trackers').insert({
         user_id: userId,
-        title: habitName,
+        name: habitName,
         description: 'Criado via WhatsApp',
         frequency: 'daily',
-        is_completed: false,
+        is_habit: true,
+        validation: [],
+        view_type: 'card',
       })
 
       if (insertError) {

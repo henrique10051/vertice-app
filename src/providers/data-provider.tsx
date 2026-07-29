@@ -77,11 +77,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const fetchHabits = useCallback(async () => {
     if (!user) return
     const { data } = await supabase
-      .from('habits')
+      .from('custom_trackers')
       .select('*')
       .eq('user_id', user.id)
+      .eq('is_habit', true)
       .order('created_at', { ascending: false })
-    setHabits(data || [])
+    const mappedHabits: Habit[] = (data || []).map((t: any) => ({
+      id: t.id,
+      user_id: t.user_id,
+      title: t.name,
+      description: t.description || '',
+      frequency: t.frequency || 'daily',
+      is_completed: false,
+      scheduled_time: t.scheduled_time,
+      duration_minutes: t.duration_minutes || 0,
+      created_at: t.created_at,
+    }))
+    setHabits(mappedHabits)
   }, [user])
 
   const fetchTransactions = useCallback(async () => {
@@ -98,11 +110,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (date: string) => {
       if (!user) return
       const { data } = await supabase
-        .from('habit_logs')
-        .select('habit_id')
+        .from('custom_tracker_entries')
+        .select('tracker_id')
         .eq('user_id', user.id)
         .eq('date', date)
-      const ids = (data || []).map((d) => d.habit_id)
+      const ids = (data || []).map((d: any) => d.tracker_id)
       setHabitLogsByDate((prev) => ({ ...prev, [date]: ids }))
     },
     [user],
@@ -112,15 +124,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     async (startDate: string, endDate: string) => {
       if (!user) return
       const { data } = await supabase
-        .from('habit_logs')
-        .select('habit_id, date')
+        .from('custom_tracker_entries')
+        .select('tracker_id, date')
         .eq('user_id', user.id)
         .gte('date', startDate)
         .lte('date', endDate)
       const byDate: Record<string, string[]> = {}
-      ;(data || []).forEach((d) => {
+      ;(data || []).forEach((d: any) => {
         if (!byDate[d.date]) byDate[d.date] = []
-        byDate[d.date].push(d.habit_id)
+        byDate[d.date].push(d.tracker_id)
       })
       setHabitLogsByDate((prev) => ({ ...prev, ...byDate }))
     },
@@ -169,24 +181,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
 
       const { data: existing } = await supabase
-        .from('habit_logs')
+        .from('custom_tracker_entries')
         .select('id')
         .eq('user_id', user.id)
-        .eq('habit_id', id)
+        .eq('tracker_id', id)
         .eq('date', date)
         .maybeSingle()
 
       if (existing) {
-        await supabase.from('habit_logs').delete().eq('id', existing.id)
-        if (isToday) await supabase.from('habits').update({ is_completed: false }).eq('id', id)
+        await supabase.from('custom_tracker_entries').delete().eq('id', existing.id)
       } else {
-        await supabase.from('habit_logs').insert({
+        await supabase.from('custom_tracker_entries').insert({
           user_id: user.id,
-          habit_id: id,
+          tracker_id: id,
           date,
-          completed_at: new Date().toISOString(),
+          values: { is_completed: true },
         })
-        if (isToday) await supabase.from('habits').update({ is_completed: true }).eq('id', id)
       }
     },
     [user],
@@ -209,19 +219,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ) => {
       if (!user) return { error: 'Usuário não autenticado.' }
       const { data, error } = await supabase
-        .from('habits')
+        .from('custom_trackers')
         .insert({
           user_id: user.id,
-          title,
+          name: title,
+          is_habit: true,
           frequency,
           description: description || '',
-          is_completed: false,
           scheduled_time: scheduledTime || null,
           duration_minutes: durationMinutes || 30,
+          validation: [],
+          view_type: 'card',
         })
         .select()
         .single()
-      if (data) setHabits((prev) => [data, ...prev])
+      if (data) {
+        const mapped: Habit = {
+          id: data.id,
+          user_id: data.user_id,
+          title: data.name,
+          description: data.description || '',
+          frequency: data.frequency || 'daily',
+          is_completed: false,
+          scheduled_time: data.scheduled_time,
+          duration_minutes: data.duration_minutes || 0,
+          created_at: data.created_at,
+        }
+        setHabits((prev) => [mapped, ...prev])
+      }
       return { error: error?.message ?? null }
     },
     [user],
@@ -230,7 +255,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const updateHabit = useCallback(
     async (id: string, updates: Partial<Pick<Habit, 'scheduled_time' | 'duration_minutes'>>) => {
       setHabits((prev) => prev.map((h) => (h.id === id ? { ...h, ...updates } : h)))
-      await supabase.from('habits').update(updates).eq('id', id)
+      await supabase.from('custom_trackers').update(updates).eq('id', id)
     },
     [],
   )
@@ -244,8 +269,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       })
       return updated
     })
-    await supabase.from('habit_logs').delete().eq('habit_id', id)
-    await supabase.from('habits').delete().eq('id', id)
+    await supabase.from('custom_tracker_entries').delete().eq('tracker_id', id)
+    await supabase.from('custom_trackers').delete().eq('id', id)
   }, [])
 
   const addTransaction = useCallback(

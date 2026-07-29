@@ -4,7 +4,9 @@ import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/types'
 import { getTodayStr } from '@/lib/date-utils'
 
-export type Exercise = Database['public']['Tables']['exercises']['Row']
+export type Exercise = Database['public']['Tables']['exercises']['Row'] & {
+  video_url?: string | null
+}
 export type WorkoutSession = Database['public']['Tables']['workout_sessions']['Row']
 export type WorkoutSet = Database['public']['Tables']['workout_sets']['Row']
 
@@ -22,7 +24,7 @@ interface WorkoutContextType {
   sets: WorkoutSet[]
   plan: WorkoutPlan | null
   loading: boolean
-  addExercise: (name: string, muscleGroup?: string) => Promise<Exercise | null>
+  addExercise: (name: string, muscleGroup?: string, videoUrl?: string) => Promise<Exercise | null>
   getOrCreateTodaySession: (notes?: string) => Promise<WorkoutSession | null>
   addSet: (
     sessionId: string,
@@ -96,11 +98,16 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   }, [user, fetchWorkouts])
 
   const addExercise = useCallback(
-    async (name: string, muscleGroup?: string) => {
+    async (name: string, muscleGroup?: string, videoUrl?: string) => {
       if (!user) return null
       const { data, error } = await supabase
         .from('exercises')
-        .insert({ user_id: user.id, name, muscle_group: muscleGroup || null })
+        .insert({
+          user_id: user.id,
+          name,
+          muscle_group: muscleGroup || null,
+          video_url: videoUrl || null,
+        })
         .select()
         .single()
       if (error || !data) return null
