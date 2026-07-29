@@ -1,43 +1,19 @@
 import { supabase } from '@/lib/supabase/client'
+import type { Database } from '@/lib/supabase/types'
 
-export type Profile = {
-  id: string
-  full_name: string
-  avatar_url: string
-  onboarding_completed: boolean
-  updated_at: string
-  weight_kg: number | null
-  height_cm: number | null
-  age: number | null
-  gender: string | null
-  activity_level: string | null
-  phone_number: string | null
-  is_premium: boolean
-}
+export type Profile = Database['public']['Tables']['profiles']['Row']
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 export async function getProfile(userId: string) {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
-  return { data: data as Profile | null, error }
+  return { data, error }
 }
 
-export async function updateProfile(
-  userId: string,
-  updates: {
-    full_name?: string
-    avatar_url?: string
-    onboarding_completed?: boolean
-    weight_kg?: number | null
-    height_cm?: number | null
-    age?: number | null
-    gender?: string | null
-    activity_level?: string | null
-    phone_number?: string | null
-  },
-) {
+export async function updateProfile(userId: string, updates: ProfileUpdate) {
   const { data, error } = await supabase
     .from('profiles')
     .upsert({ id: userId, ...updates, updated_at: new Date().toISOString() })
     .select()
     .single()
-  return { data: data as Profile | null, error }
+  return { data, error }
 }

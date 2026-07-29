@@ -35,6 +35,11 @@ const initialGoals: Goal[] = [
 
 const goalsStore = createStore<{ goals: Goal[] }>({ goals: initialGoals })
 
+function statusForSubtasks(subtasks: Subtask[]): Goal['status'] {
+  if (subtasks.length > 0 && subtasks.every((s) => s.completed)) return 'Concluído'
+  return 'Em Progresso'
+}
+
 export default function useGoalsStore() {
   const [state, setState] = goalsStore.useStore()
 
@@ -45,12 +50,7 @@ export default function useGoalsStore() {
         const updatedSubtasks = g.subtasks.map((s) =>
           s.id === subtaskId ? { ...s, completed: !s.completed } : s,
         )
-        const allCompleted = updatedSubtasks.every((s) => s.completed)
-        return {
-          ...g,
-          subtasks: updatedSubtasks,
-          status: allCompleted ? 'Concluído' : 'Em Progresso',
-        }
+        return { ...g, subtasks: updatedSubtasks, status: statusForSubtasks(updatedSubtasks) }
       }),
     }))
   }
@@ -61,10 +61,49 @@ export default function useGoalsStore() {
       title,
       targetDate,
       status: 'Em Progresso',
-      subtasks: subtasks.map((t) => ({ id: Math.random().toString(), title: t, completed: false })),
+      subtasks: subtasks
+        .filter((t) => t.trim())
+        .map((t) => ({ id: Math.random().toString(), title: t.trim(), completed: false })),
     }
     setState((prev) => ({ goals: [...prev.goals, newGoal] }))
   }
 
-  return { goals: state.goals, toggleSubtask, addGoal }
+  /**
+   * Edits title/date/subtasks. Each entry may carry an existing `id` (preserves its completed
+   * state) or omit it (created fresh, not completed). Entries whose id no longer appears in the
+   * new list are dropped, so removing a row in the edit form deletes that subtask.
+   */
+  const updateGoal = (
+    goalId: string,
+    updates: { title: string; targetDate: string; subtasks: { id?: string; title: string }[] },
+  ) => {
+    setState((prev) => ({
+      goals: prev.goals.map((g) => {
+        if (g.id !== goalId) return g
+        const subtasks: Subtask[] = updates.subtasks
+          .filter((s) => s.title.trim())
+          .map((s) => {
+            const existing = s.id ? g.subtasks.find((old) => old.id === s.id) : undefined
+            return {
+              id: existing?.id || Math.random().toString(),
+              title: s.title.trim(),
+              completed: existing?.completed || false,
+            }
+          })
+        return {
+          ...g,
+          title: updates.title,
+          targetDate: updates.targetDate,
+          subtasks,
+          status: statusForSubtasks(subtasks),
+        }
+      }),
+    }))
+  }
+
+  const deleteGoal = (goalId: string) => {
+    setState((prev) => ({ goals: prev.goals.filter((g) => g.id !== goalId) }))
+  }
+
+  return { goals: state.goals, toggleSubtask, addGoal, updateGoal, deleteGoal }
 }

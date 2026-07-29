@@ -1,13 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
+import type { Database } from '@/lib/supabase/types'
 
-export type Subscription = {
-  id: string
-  user_id: string
-  plan_type: 'free' | 'pro' | 'premium'
-  status: string
-  created_at: string
-  updated_at: string
-}
+export type Subscription = Database['public']['Tables']['subscriptions']['Row']
 
 export async function getSubscription(userId: string) {
   const { data, error } = await supabase
@@ -15,7 +9,7 @@ export async function getSubscription(userId: string) {
     .select('*')
     .eq('user_id', userId)
     .single()
-  return { data: data as Subscription | null, error }
+  return { data, error }
 }
 
 export async function startCheckout(planId: string) {

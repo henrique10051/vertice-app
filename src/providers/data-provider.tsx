@@ -45,6 +45,10 @@ interface DataContextType {
   ) => Promise<void>
   deleteHabit: (id: string) => Promise<void>
   addTransaction: (t: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => Promise<void>
+  updateTransaction: (
+    id: string,
+    updates: Omit<Transaction, 'id' | 'user_id' | 'created_at'>,
+  ) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
   financeCategories: string[]
   addFinanceCategory: (name: string) => Promise<void>
@@ -257,6 +261,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [user],
   )
 
+  const updateTransaction = useCallback(
+    async (id: string, updates: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {
+      setTransactions((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)))
+      await supabase.from('transactions').update(updates).eq('id', id)
+    },
+    [],
+  )
+
   const deleteTransaction = useCallback(async (id: string) => {
     setTransactions((prev) => prev.filter((t) => t.id !== id))
     await supabase.from('transactions').delete().eq('id', id)
@@ -296,6 +308,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         updateHabit,
         deleteHabit,
         addTransaction,
+        updateTransaction,
         deleteTransaction,
         financeCategories,
         addFinanceCategory,

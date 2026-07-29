@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, X } from 'lucide-react'
 import useHabitsStore from '@/stores/useHabitsStore'
-import useFinancesStore from '@/stores/useFinancesStore'
+import useFinancesStore, { type Transaction } from '@/stores/useFinancesStore'
 import { getTodayStr } from '@/lib/date-utils'
 import { DURATION_OPTIONS } from '@/lib/duration-options'
 import { useToast } from '@/hooks/use-toast'
@@ -77,6 +77,9 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
             value={scheduledTime}
             onChange={(e) => setScheduledTime(e.target.value)}
           />
+          <p className="text-xs text-muted-foreground">
+            Se você ativou lembretes push no Perfil, o app avisa nesse horário.
+          </p>
         </div>
         <div className="space-y-2">
           <Label>Duração</Label>
@@ -104,14 +107,27 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
-export function FinanceForm({ onSuccess }: { onSuccess: () => void }) {
-  const { addTransaction, financeCategories, addFinanceCategory, deleteFinanceCategory } =
-    useFinancesStore()
+export function FinanceForm({
+  onSuccess,
+  transaction,
+}: {
+  onSuccess: () => void
+  transaction?: Transaction
+}) {
+  const {
+    addTransaction,
+    updateTransaction,
+    financeCategories,
+    addFinanceCategory,
+    deleteFinanceCategory,
+  } = useFinancesStore()
   const { toast } = useToast()
-  const [desc, setDesc] = useState('')
-  const [amount, setAmount] = useState('')
-  const [type, setType] = useState<'income' | 'expense'>('expense')
-  const [cat, setCat] = useState<any>('')
+  const isEditing = !!transaction
+  const [desc, setDesc] = useState(transaction?.description || '')
+  const [amount, setAmount] = useState(transaction ? String(transaction.amount) : '')
+  const [type, setType] = useState<'income' | 'expense'>(transaction?.type || 'expense')
+  const [cat, setCat] = useState<any>(transaction?.category || '')
+  const [date, setDate] = useState(transaction?.date || getTodayStr())
   const [newCat, setNewCat] = useState('')
   const [addingCat, setAddingCat] = useState(false)
 
@@ -129,14 +145,14 @@ export function FinanceForm({ onSuccess }: { onSuccess: () => void }) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!desc || !amount) return
-    await addTransaction({
-      description: desc,
-      amount: Number(amount),
-      type,
-      category: cat,
-      date: getTodayStr(),
-    })
-    toast({ title: 'Transação salva!', description: `${desc} registrada com sucesso.` })
+    const payload = { description: desc, amount: Number(amount), type, category: cat, date }
+    if (isEditing && transaction) {
+      await updateTransaction(transaction.id, payload)
+      toast({ title: 'Transação atualizada!', description: `${desc} foi ajustada.` })
+    } else {
+      await addTransaction(payload)
+      toast({ title: 'Transação salva!', description: `${desc} registrada com sucesso.` })
+    }
     onSuccess()
   }
 
@@ -174,6 +190,10 @@ export function FinanceForm({ onSuccess }: { onSuccess: () => void }) {
           onChange={(e) => setDesc(e.target.value)}
           required
         />
+      </div>
+      <div className="space-y-2">
+        <Label>Data</Label>
+        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       </div>
       <div className="space-y-2">
         <Label>Categoria</Label>
@@ -244,7 +264,7 @@ export function FinanceForm({ onSuccess }: { onSuccess: () => void }) {
         )}
       </div>
       <Button type="submit" className="w-full">
-        Salvar Transação
+        {isEditing ? 'Salvar Alterações' : 'Salvar Transação'}
       </Button>
     </form>
   )

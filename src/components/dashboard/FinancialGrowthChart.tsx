@@ -3,10 +3,45 @@ import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'rec
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp } from 'lucide-react'
-import { generateFinancialTrendData } from '@/lib/mock-data'
+import useFinancesStore from '@/stores/useFinancesStore'
+
+const MONTHS = 6
+const monthNames = [
+  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+]
 
 export function FinancialGrowthChart() {
-  const data = useMemo(() => generateFinancialTrendData(6), [])
+  const { transactions } = useFinancesStore()
+
+  const data = useMemo(() => {
+    const now = new Date()
+    const months = Array.from({ length: MONTHS }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (MONTHS - 1 - i), 1)
+      return { year: d.getFullYear(), month: d.getMonth() }
+    })
+
+    let runningBalance = 0
+    for (const t of transactions) {
+      const d = new Date(t.date)
+      const key = { year: d.getFullYear(), month: d.getMonth() }
+      const isBeforeWindow =
+        key.year < months[0].year || (key.year === months[0].year && key.month < months[0].month)
+      if (isBeforeWindow) runningBalance += t.type === 'income' ? t.amount : -t.amount
+    }
+
+    return months.map(({ year, month }) => {
+      const monthTransactions = transactions.filter((t) => {
+        const d = new Date(t.date)
+        return d.getFullYear() === year && d.getMonth() === month
+      })
+      const savings = monthTransactions.reduce(
+        (sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount),
+        0,
+      )
+      runningBalance += savings
+      return { month: monthNames[month], balance: Math.round(runningBalance), savings: Math.round(savings) }
+    })
+  }, [transactions])
 
   return (
     <Card>

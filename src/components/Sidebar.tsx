@@ -13,6 +13,8 @@ import {
   ShoppingCart,
   Timer,
   CalendarDays,
+  Dumbbell,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useMainStore from '@/stores/main'
@@ -23,6 +25,8 @@ const navItems = [
   { path: '/agenda', label: 'Agenda', icon: CalendarDays },
   { path: '/objetivos', label: 'Objetivos', icon: Target },
   { path: '/financas', label: 'Finanças', icon: Wallet },
+  { path: '/treino', label: 'Treino', icon: Dumbbell },
+  { path: '/leitura', label: 'Leitura', icon: BookOpen },
   { path: '/mercado', label: 'Mercado', icon: ShoppingCart },
   { path: '/pomodoro', label: 'Pomodoro', icon: Timer },
   { path: '/planos', label: 'Planos', icon: CreditCard },

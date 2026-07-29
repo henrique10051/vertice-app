@@ -1,15 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
+import type { Database } from '@/lib/supabase/types'
 import { getTodayStr } from '@/lib/date-utils'
 
-export type HealthLog = {
-  id: string
-  user_id: string
-  date: string
-  calories_consumed: number
-  water_intake_ml: number
-}
+export type HealthLog = Database['public']['Tables']['health_logs']['Row']
 
 export type HealthProfile = {
   weight_kg: number | null

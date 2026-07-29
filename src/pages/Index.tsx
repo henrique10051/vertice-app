@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { MetricCard } from '@/components/dashboard/MetricCard'
 import { HabitGrowthChart } from '@/components/dashboard/HabitGrowthChart'
@@ -10,6 +11,7 @@ import { WaterTrackerCard } from '@/components/dashboard/WaterTrackerCard'
 import { CalorieTrackerCard } from '@/components/dashboard/CalorieTrackerCard'
 import { FoodLoggerCard } from '@/components/dashboard/FoodLoggerCard'
 import { calculateDailyCalories, calculateWaterGoal, type Gender } from '@/lib/health-utils'
+import { getTodayStr, addDays, strToDate } from '@/lib/date-utils'
 import { Link } from 'react-router-dom'
 import {
   CheckCircle2,
@@ -30,8 +32,10 @@ const quotes = [
   'Invista em você mesmo. É o melhor investimento que fará.',
 ]
 
+const WEEK_DAYS = 7
+
 export default function Index() {
-  const { habits, toggleHabit } = useHabitsStore()
+  const { habits, toggleHabit, habitLogsByDate, fetchHabitLogsRange } = useHabitsStore()
   const { transactions } = useFinancesStore()
   const { goals } = useGoalsStore()
   const { healthLog, healthProfile, addWater, addCalories } = useHealthStore()
@@ -50,8 +54,10 @@ export default function Index() {
     ? calculateWaterGoal(Number(healthProfile.weight_kg))
     : 2000
 
-  const pendingHabits = habits.filter((h) => !h.is_completed).slice(0, 3)
-  const completedToday = habits.filter((h) => h.is_completed).length
+  const today = getTodayStr()
+  const completedTodayIds = habitLogsByDate[today] || []
+  const pendingHabits = habits.filter((h) => !completedTodayIds.includes(h.id)).slice(0, 3)
+  const completedToday = completedTodayIds.length
   const habitRate = habits.length > 0 ? Math.round((completedToday / habits.length) * 100) : 0
 
   const monthlyIncome = transactions
@@ -71,20 +77,26 @@ export default function Index() {
     : 0
   const activeGoals = goals.filter((g) => g.status === 'Em Progresso').length
 
-  const activityData = [
-    { day: 'Seg', score: 30 },
-    { day: 'Ter', score: 45 },
-    { day: 'Qua', score: 35 },
-    { day: 'Qui', score: 60 },
-    { day: 'Sex', score: 55 },
-    { day: 'Sáb', score: 80 },
-    { day: 'Dom', score: 90 },
-  ]
+  const last7Days = useMemo(
+    () => Array.from({ length: WEEK_DAYS }, (_, i) => addDays(today, -(WEEK_DAYS - 1 - i))),
+    [today],
+  )
+
+  useEffect(() => {
+    fetchHabitLogsRange(last7Days[0], last7Days[last7Days.length - 1])
+  }, [habits.length, fetchHabitLogsRange, last7Days])
+
+  const activityData = last7Days.map((date) => {
+    const count = habitLogsByDate[date]?.length || 0
+    const score = habits.length > 0 ? Math.round((count / habits.length) * 100) : 0
+    const day = strToDate(date).toLocaleDateString('pt-BR', { weekday: 'short' })
+    return { day, score }
+  })
 
   const now = new Date()
   const hour = now.getHours()
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
-  const today = now.toLocaleDateString('pt-BR', {
+  const todayLabel = now.toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -98,7 +110,7 @@ export default function Index() {
         <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              {today}
+              {todayLabel}
             </p>
             <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight mt-1">
               {greeting}.

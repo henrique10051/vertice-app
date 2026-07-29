@@ -1,12 +1,35 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Activity } from 'lucide-react'
-import { generateHabitConsistencyData } from '@/lib/mock-data'
+import useHabitsStore from '@/stores/useHabitsStore'
+import { getTodayStr, addDays, strToDate } from '@/lib/date-utils'
+
+const HISTORY_DAYS = 30
 
 export function HabitGrowthChart() {
-  const data = useMemo(() => generateHabitConsistencyData(30), [])
+  const { habits, habitLogsByDate, fetchHabitLogsRange } = useHabitsStore()
+  const today = getTodayStr()
+  const historyDays = useMemo(
+    () => Array.from({ length: HISTORY_DAYS }, (_, i) => addDays(today, -(HISTORY_DAYS - 1 - i))),
+    [today],
+  )
+
+  useEffect(() => {
+    fetchHabitLogsRange(historyDays[0], historyDays[historyDays.length - 1])
+  }, [habits.length, fetchHabitLogsRange, historyDays])
+
+  const data = useMemo(
+    () =>
+      historyDays.map((date) => {
+        const count = habitLogsByDate[date]?.length || 0
+        const rate = habits.length > 0 ? Math.round((count / habits.length) * 100) : 0
+        const day = strToDate(date).toLocaleDateString('pt-BR', { weekday: 'short' })
+        return { date, day, rate }
+      }),
+    [historyDays, habitLogsByDate, habits.length],
+  )
 
   return (
     <Card>

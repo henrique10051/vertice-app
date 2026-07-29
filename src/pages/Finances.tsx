@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import useFinancesStore from '@/stores/useFinancesStore'
+import useFinancesStore, { type Transaction } from '@/stores/useFinancesStore'
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { TransactionsPanel } from '@/components/TransactionsPanel'
 import { FinanceAddDialog } from '@/components/FinanceAddDialog'
+import { FinanceProjectionCard } from '@/components/FinanceProjectionCard'
+import { computeMonthlyProjection } from '@/lib/finance-projection'
 
 const COLORS = [
   'hsl(var(--chart-4))',
@@ -17,6 +19,17 @@ const COLORS = [
 export default function Finances() {
   const { transactions } = useFinancesStore()
   const [addOpen, setAddOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined)
+
+  const openEdit = (t: Transaction) => {
+    setEditingTransaction(t)
+    setAddOpen(true)
+  }
+
+  const openCreate = () => {
+    setEditingTransaction(undefined)
+    setAddOpen(true)
+  }
 
   const { income, expense, balance, expensesByCategory } = useMemo(() => {
     let inc = 0,
@@ -33,6 +46,8 @@ export default function Finances() {
     const chartData = Object.entries(catMap).map(([name, value]) => ({ name, value }))
     return { income: inc, expense: exp, balance: inc - exp, expensesByCategory: chartData }
   }, [transactions])
+
+  const projection = useMemo(() => computeMonthlyProjection(transactions), [transactions])
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -90,8 +105,10 @@ export default function Finances() {
         </Card>
       </div>
 
+      <FinanceProjectionCard projection={projection} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <TransactionsPanel transactions={transactions} onAdd={() => setAddOpen(true)} />
+        <TransactionsPanel transactions={transactions} onAdd={openCreate} onEdit={openEdit} />
 
         <Card>
           <CardHeader>
@@ -143,7 +160,7 @@ export default function Finances() {
         </Card>
       </div>
 
-      <FinanceAddDialog open={addOpen} setOpen={setAddOpen} />
+      <FinanceAddDialog open={addOpen} setOpen={setAddOpen} transaction={editingTransaction} />
     </div>
   )
 }

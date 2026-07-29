@@ -6,6 +6,7 @@ export default function useFinancesStore() {
   const {
     transactions,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     refetchTransactions,
     financeCategories,
@@ -15,6 +16,7 @@ export default function useFinancesStore() {
   return {
     transactions,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     refetchTransactions,
     financeCategories,

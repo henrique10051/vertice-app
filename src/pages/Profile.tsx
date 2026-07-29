@@ -1,14 +1,46 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { getProfile, updateProfile, type Profile } from '@/services/profiles'
+import { exportUserData, deleteAccount } from '@/services/privacy'
+import {
+  isPushSupported,
+  getPushSubscription,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from '@/services/push-subscriptions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
-import { User, Mail, LogOut, Loader2, Save, Phone, Crown, Sparkles } from 'lucide-react'
+import {
+  User,
+  Mail,
+  LogOut,
+  Loader2,
+  Save,
+  Phone,
+  Crown,
+  Sparkles,
+  Download,
+  Trash2,
+  ShieldCheck,
+  Bell,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function ProfilePage() {
@@ -20,6 +52,10 @@ export default function ProfilePage() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -33,6 +69,11 @@ export default function ProfilePage() {
       setLoading(false)
     })
   }, [user])
+
+  useEffect(() => {
+    if (!isPushSupported()) return
+    getPushSubscription().then((sub) => setPushEnabled(!!sub))
+  }, [])
 
   const handleSave = async () => {
     if (!user) return
@@ -53,6 +94,52 @@ export default function ProfilePage() {
   }
 
   const handleSignOut = async () => {
+    await signOut()
+  }
+
+  const handleTogglePush = async (checked: boolean) => {
+    if (!user) return
+    setPushBusy(true)
+    try {
+      if (checked) {
+        await subscribeToPush(user.id)
+        setPushEnabled(true)
+        toast({ title: 'Lembretes ativados', description: 'Você receberá notificações push.' })
+      } else {
+        await unsubscribeFromPush()
+        setPushEnabled(false)
+        toast({ title: 'Lembretes desativados' })
+      }
+    } catch (err) {
+      toast({
+        title: 'Não foi possível alterar as notificações',
+        description: err instanceof Error ? err.message : String(err),
+        variant: 'destructive',
+      })
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  const handleExportData = async () => {
+    setExporting(true)
+    const { error } = await exportUserData()
+    setExporting(false)
+    if (error) {
+      toast({ title: 'Erro ao exportar dados', description: error.message, variant: 'destructive' })
+    } else {
+      toast({ title: 'Exportação concluída', description: 'Seus dados foram baixados em JSON.' })
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    const { error } = await deleteAccount()
+    if (error) {
+      setDeleting(false)
+      toast({ title: 'Erro ao excluir conta', description: error.message, variant: 'destructive' })
+      return
+    }
     await signOut()
   }
 
@@ -181,6 +268,102 @@ export default function ProfilePage() {
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-card rounded-3xl border-none shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell size={20} className="text-primary" />
+            Notificações
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="font-medium">Lembretes push</p>
+              <p className="text-sm text-muted-foreground">
+                Receba um aviso no horário marcado de cada hábito ou tarefa da agenda, mesmo
+                com o app fechado.
+              </p>
+            </div>
+            <Switch
+              checked={pushEnabled}
+              disabled={pushBusy || !isPushSupported()}
+              onCheckedChange={handleTogglePush}
+            />
+          </div>
+          {!isPushSupported() && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Seu navegador não suporta notificações push, ou o app ainda não foi instalado na
+              tela de início (necessário no iPhone).
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-card rounded-3xl border-none shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck size={20} className="text-primary" />
+            Privacidade e dados
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Conforme a LGPD, você pode baixar uma cópia de todos os seus dados ou excluir sua
+            conta permanentemente. Leia a{' '}
+            <Link to="/privacidade" target="_blank" className="text-primary hover:underline">
+              Política de Privacidade
+            </Link>
+            .
+          </p>
+
+          <Button
+            onClick={handleExportData}
+            disabled={exporting}
+            variant="outline"
+            className="w-full gap-2"
+          >
+            {exporting ? <Loader2 className="animate-spin" size={18} /> : <Download size={18} />}
+            Exportar meus dados
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full gap-2 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border-rose-500/30"
+              >
+                <Trash2 size={18} />
+                Excluir minha conta
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir sua conta permanentemente?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação é irreversível. Todos os seus hábitos, transações, registros de saúde,
+                  tarefas, conversas com o mentor e a assinatura serão apagados imediatamente e não
+                  podem ser recuperados.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="bg-rose-500 hover:bg-rose-600 focus:ring-rose-500"
+                >
+                  {deleting ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    'Sim, excluir tudo'
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 

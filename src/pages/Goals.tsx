@@ -2,14 +2,28 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
-import useGoalsStore from '@/stores/useGoalsStore'
-import { Target, Calendar, CheckCircle2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import useGoalsStore, { type Goal } from '@/stores/useGoalsStore'
+import { Target, Calendar, CheckCircle2, Plus, Pencil, Trash2 } from 'lucide-react'
 import { formatDatePT } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
+import { GoalFormDialog } from '@/components/GoalFormDialog'
 
 export default function Goals() {
-  const { goals, toggleSubtask } = useGoalsStore()
+  const { goals, toggleSubtask, deleteGoal } = useGoalsStore()
   const [filter, setFilter] = useState('all')
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingGoal, setEditingGoal] = useState<Goal | undefined>(undefined)
+
+  const openCreate = () => {
+    setEditingGoal(undefined)
+    setFormOpen(true)
+  }
+
+  const openEdit = (goal: Goal) => {
+    setEditingGoal(goal)
+    setFormOpen(true)
+  }
 
   const filteredGoals = goals.filter(
     (g) =>
@@ -25,6 +39,9 @@ export default function Goals() {
           <h1 className="text-3xl font-bold tracking-tight mb-2">Acompanhamento de Objetivos</h1>
           <p className="text-muted-foreground">Divida grandes sonhos em passos executáveis.</p>
         </div>
+        <Button onClick={openCreate} className="gap-2 shrink-0">
+          <Plus size={16} /> Novo Objetivo
+        </Button>
       </div>
 
       <Tabs defaultValue="all" onValueChange={setFilter} className="w-full">
@@ -55,11 +72,23 @@ export default function Goals() {
                   isDone && 'bg-primary/5 dark:bg-primary/10',
                 )}
               >
-                {isDone && (
-                  <div className="absolute top-0 right-0 p-4">
-                    <CheckCircle2 className="text-primary" size={24} />
-                  </div>
-                )}
+                <div className="absolute top-0 right-0 p-4 flex items-center gap-1">
+                  {isDone && <CheckCircle2 className="text-primary mr-1" size={24} />}
+                  <button
+                    onClick={() => openEdit(goal)}
+                    aria-label="Editar objetivo"
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={() => deleteGoal(goal.id)}
+                    aria-label="Excluir objetivo"
+                    className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
 
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3 mb-2 text-indigo-500">
@@ -125,6 +154,8 @@ export default function Goals() {
           })}
         </div>
       </Tabs>
+
+      <GoalFormDialog open={formOpen} setOpen={setFormOpen} goal={editingGoal} />
     </div>
   )
 }

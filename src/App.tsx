@@ -11,10 +11,13 @@ import Finances from '@/pages/Finances'
 import Mentor from '@/pages/Mentor'
 import Profile from '@/pages/Profile'
 import Auth from '@/pages/Auth'
+import Privacy from '@/pages/Privacy'
 import NotFound from '@/pages/NotFound'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 import { DataProvider } from '@/providers/data-provider'
 import { HealthProvider } from '@/providers/health-provider'
+import { WorkoutProvider } from '@/providers/workout-provider'
+import { ReadingProvider } from '@/providers/reading-provider'
 import { ReactNode, useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import Plans from '@/pages/Plans'
@@ -30,6 +33,8 @@ import { getProfile, type Profile as ProfileData } from '@/services/profiles'
 import ForgotPassword from '@/pages/ForgotPassword'
 import UpdatePassword from '@/pages/UpdatePassword'
 import AgendaPage from '@/pages/Agenda'
+import Treino from '@/pages/Treino'
+import Leitura from '@/pages/Leitura'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -82,7 +87,9 @@ const App = () => (
     <AuthProvider>
       <DataProvider>
         <HealthProvider>
-          <InventoryProvider>
+          <WorkoutProvider>
+          <ReadingProvider>
+            <InventoryProvider>
             <AgendaProvider>
               <NotificationProvider>
                 <NotificationGenerator />
@@ -92,6 +99,7 @@ const App = () => (
                     <Sonner />
                     <Routes>
                       <Route path="/auth" element={<Auth />} />
+                      <Route path="/privacidade" element={<Privacy />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
                       <Route path="/update-password" element={<UpdatePassword />} />
                       <Route
@@ -120,6 +128,8 @@ const App = () => (
                         <Route path="/planos" element={<Plans />} />
                         <Route path="/agenda" element={<AgendaPage />} />
                         <Route path="/saude" element={<Health />} />
+                        <Route path="/treino" element={<Treino />} />
+                        <Route path="/leitura" element={<Leitura />} />
                         <Route path="/mentor" element={<Mentor />} />
                         <Route path="/perfil" element={<Profile />} />
                       </Route>
@@ -130,6 +140,8 @@ const App = () => (
               </NotificationProvider>
             </AgendaProvider>
           </InventoryProvider>{' '}
+          </ReadingProvider>
+          </WorkoutProvider>
         </HealthProvider>
       </DataProvider>
     </AuthProvider>

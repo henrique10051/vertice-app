@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Mountain, Loader2, MailCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +15,7 @@ export default function Auth() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [signupSuccess, setSignupSuccess] = useState(false)
@@ -33,6 +35,11 @@ export default function Auth() {
     setResendSuccess(false)
     setSubmitting(true)
     if (mode === 'signup') {
+      if (!consent) {
+        setError('Você precisa aceitar a Política de Privacidade para criar uma conta.')
+        setSubmitting(false)
+        return
+      }
       const { error } = await signUp(email, password, fullName)
       if (error) {
         setError(error.message)
@@ -141,6 +148,24 @@ export default function Auth() {
               </div>
             )}
 
+            {mode === 'signup' && (
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="consent"
+                  checked={consent}
+                  onCheckedChange={(checked) => setConsent(checked === true)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="consent" className="text-sm font-normal leading-snug">
+                  Li e aceito a{' '}
+                  <Link to="/privacidade" target="_blank" className="text-primary hover:underline">
+                    Política de Privacidade e Termos de Uso
+                  </Link>
+                  .
+                </Label>
+              </div>
+            )}
+
             {error && (
               <p className="text-sm text-rose-500 bg-rose-500/10 rounded-lg p-3">{error}</p>
             )}
@@ -190,7 +215,11 @@ export default function Auth() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={submitting || (mode === 'signup' && !consent)}
+            >
               {submitting ? (
                 <Loader2 className="animate-spin" size={18} />
               ) : mode === 'login' ? (

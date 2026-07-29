@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Transaction } from '@/stores/useFinancesStore'
 import { formatDatePT } from '@/lib/date-utils'
 import { AddCard } from './AddCard'
-import { DollarSign, Home, ShoppingCart, Car, BookOpen, Trash2 } from 'lucide-react'
+import { DollarSign, Home, ShoppingCart, Car, BookOpen, Trash2, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useFinancesStore from '@/stores/useFinancesStore'
 
@@ -17,9 +17,11 @@ const categoryIcons: Record<string, any> = {
 export function TransactionsPanel({
   transactions,
   onAdd,
+  onEdit,
 }: {
   transactions: Transaction[]
   onAdd: () => void
+  onEdit: (t: Transaction) => void
 }) {
   const { deleteTransaction } = useFinancesStore()
   return (
@@ -64,6 +66,13 @@ export function TransactionsPanel({
                   {isIncome ? '+' : '-'} R${' '}
                   {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
+                <button
+                  onClick={() => onEdit(t)}
+                  aria-label="Editar transação"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Pencil size={16} />
+                </button>
                 <button
                   onClick={() => deleteTransaction(t.id)}
                   aria-label="Excluir transação"
