@@ -37,7 +37,6 @@ import AgendaPage from '@/pages/Agenda'
 import Treino from '@/pages/Treino'
 import Leitura from '@/pages/Leitura'
 import Rotinas from '@/pages/Rotinas'
-import Rastreadores from '@/pages/Rastreadores'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -126,7 +125,6 @@ const App = () => (
                               <Route path="/" element={<Index />} />
                               <Route path="/habitos" element={<Habits />} />
                               <Route path="/rotinas" element={<Rotinas />} />
-                              <Route path="/rastreadores" element={<Rastreadores />} />
                               <Route path="/objetivos" element={<Goals />} />
                               <Route path="/financas" element={<Finances />} />
                               <Route path="/mercado" element={<Mercado />} />

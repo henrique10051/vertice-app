@@ -13,6 +13,11 @@ import { HabitStatsCards } from '@/components/HabitStatsCards'
 import { HabitEvolutionChart } from '@/components/HabitEvolutionChart'
 import { HabitCard } from '@/components/HabitCard'
 import { ptBR } from 'date-fns/locale'
+import { useAuth } from '@/hooks/use-auth'
+import { useCustomTrackersStore } from '@/stores/useCustomTrackersStore'
+import { TrackerLogDialog } from '@/components/TrackerLogDialog'
+import { HabitHistoryDialog } from '@/components/HabitHistoryDialog'
+import type { Habit } from '@/stores/useHabitsStore'
 
 const HISTORY_DAYS = 30
 
@@ -26,6 +31,18 @@ export default function Habits() {
     fetchHabitLogsForDate,
     fetchHabitLogsRange,
   } = useHabitsStore()
+  
+  const { user } = useAuth()
+  const { trackerEntries, loadFromBackend, deleteTrackerEntry, syncWithBackend } = useCustomTrackersStore()
+
+  // Dialog & Active items states
+  const [logDialogOpen, setLogDialogOpen] = useState(false)
+  const [activeLogTaskId, setActiveLogTaskId] = useState<string | null>(null)
+  const [activeLogTrackerId, setActiveLogTrackerId] = useState<string | null>(null)
+
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
+  const [activeHistoryHabit, setActiveHistoryHabit] = useState<Habit | null>(null)
+
   const today = getTodayStr()
   const [selectedDate, setSelectedDate] = useState(today)
   const [addOpen, setAddOpen] = useState(false)
@@ -50,11 +67,30 @@ export default function Habits() {
     fetchHabitLogsRange(historyDays[0], historyDays[historyDays.length - 1])
   }, [habits.length, fetchHabitLogsRange, historyDays])
 
-  const completedIds = habitLogsByDate[selectedDate] || []
+  useEffect(() => {
+    if (user) {
+      loadFromBackend(user.id)
+    }
+  }, [user, loadFromBackend])
+
+  // Check if a habit is done on a specific date (combining standard database logs and schema trackers entries)
+  const isHabitCompletedOnDate = useCallback(
+    (habitId: string, date: string) => {
+      const inContext = (habitLogsByDate[date] || []).includes(habitId)
+      const entriesForTracker = trackerEntries[habitId] || []
+      const inTrackers = entriesForTracker.some((e) => e.date === date)
+      return inContext || inTrackers
+    },
+    [habitLogsByDate, trackerEntries],
+  )
+
+  const completedTodayCount = useMemo(() => {
+    return habits.filter((habit) => isHabitCompletedOnDate(habit.id, selectedDate)).length
+  }, [habits, selectedDate, isHabitCompletedOnDate])
 
   const evolutionData = useMemo(() => {
     return historyDays.map((date) => {
-      const count = habitLogsByDate[date]?.length || 0
+      const count = habits.filter((habit) => isHabitCompletedOnDate(habit.id, date)).length
       const rate = habits.length > 0 ? Math.round((count / habits.length) * 100) : 0
       const label = strToDate(date).toLocaleDateString('pt-BR', {
         day: '2-digit',
@@ -62,15 +98,16 @@ export default function Habits() {
       })
       return { date, label, rate }
     })
-  }, [historyDays, habitLogsByDate, habits.length])
+  }, [historyDays, habits, isHabitCompletedOnDate])
 
   const activeOverallDates = useMemo(() => {
     const set = new Set<string>()
     historyDays.forEach((date) => {
-      if ((habitLogsByDate[date]?.length || 0) > 0) set.add(date)
+      const count = habits.filter((habit) => isHabitCompletedOnDate(habit.id, date)).length
+      if (count > 0) set.add(date)
     })
     return set
-  }, [historyDays, habitLogsByDate])
+  }, [historyDays, habits, isHabitCompletedOnDate])
 
   const currentStreak = useMemo(
     () => computeStreak(activeOverallDates, today),
@@ -84,10 +121,10 @@ export default function Habits() {
   const last7DaysRates = useMemo(
     () =>
       last7Days.map((date) => {
-        const count = habitLogsByDate[date]?.length || 0
+        const count = habits.filter((habit) => isHabitCompletedOnDate(habit.id, date)).length
         return habits.length > 0 ? Math.round((count / habits.length) * 100) : 0
       }),
-    [last7Days, habitLogsByDate, habits.length],
+    [last7Days, habits, isHabitCompletedOnDate],
   )
   const consistencyPercent = useMemo(() => {
     if (last7DaysRates.length === 0) return 0
@@ -99,7 +136,7 @@ export default function Habits() {
     habits.forEach((habit) => {
       const activeDates = new Set<string>()
       historyDays.forEach((date) => {
-        if ((habitLogsByDate[date] || []).includes(habit.id)) activeDates.add(date)
+        if (isHabitCompletedOnDate(habit.id, date)) activeDates.add(date)
       })
       map[habit.id] = {
         streak: computeStreak(activeDates, today),
@@ -107,12 +144,41 @@ export default function Habits() {
       }
     })
     return map
-  }, [habits, historyDays, habitLogsByDate, today, last7Days])
+  }, [habits, historyDays, isHabitCompletedOnDate, today, last7Days])
+
+  const handleToggleCustom = useCallback(
+    async (habit: Habit) => {
+      const isDone = isHabitCompletedOnDate(habit.id, selectedDate)
+      if (isDone) {
+        if (confirm('Deseja apagar o registro preenchido para hoje?')) {
+          const entries = trackerEntries[habit.id] || []
+          const todayEntry = entries.find((e) => e.date === selectedDate)
+          if (todayEntry) {
+            await deleteTrackerEntry(habit.id, todayEntry.id)
+            if (user) await syncWithBackend(user.id)
+          } else {
+            // Fallback for context toggle
+            await toggleHabitForDate(habit.id, selectedDate)
+          }
+        }
+      } else {
+        setActiveLogTrackerId(habit.id)
+        setActiveLogTaskId(null)
+        setLogDialogOpen(true)
+      }
+    },
+    [isHabitCompletedOnDate, selectedDate, trackerEntries, deleteTrackerEntry, user, syncWithBackend, toggleHabitForDate],
+  )
+
+  const handleShowHistory = useCallback((habit: Habit) => {
+    setActiveHistoryHabit(habit)
+    setHistoryDialogOpen(true)
+  }, [])
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <HabitStatsCards
-        completedToday={completedIds.length}
+        completedToday={completedTodayCount}
         totalHabits={habits.length}
         currentStreak={currentStreak}
         bestStreak={bestStreak}
@@ -204,7 +270,7 @@ export default function Habits() {
 
       <div className="grid gap-3">
         {habits.map((habit) => {
-          const isDone = completedIds.includes(habit.id)
+          const isDone = isHabitCompletedOnDate(habit.id, selectedDate)
           const { streak, recentDays } = habitStreaks[habit.id] || { streak: 0, recentDays: [] }
           return (
             <HabitCard
@@ -214,6 +280,8 @@ export default function Habits() {
               streak={streak}
               recentDays={recentDays}
               onToggle={() => toggleHabitForDate(habit.id, selectedDate)}
+              onToggleCustom={() => handleToggleCustom(habit)}
+              onShowHistory={() => handleShowHistory(habit)}
               onDelete={() => deleteHabit(habit.id)}
               onScheduleChange={(time, durationMinutes) =>
                 updateHabit(habit.id, { scheduled_time: time, duration_minutes: durationMinutes })
@@ -227,6 +295,22 @@ export default function Habits() {
       <HabitEvolutionChart data={evolutionData} />
 
       <HabitAddDialog open={addOpen} setOpen={setAddOpen} />
+
+      <TrackerLogDialog
+        open={logDialogOpen}
+        setOpen={setLogDialogOpen}
+        taskId={activeLogTaskId}
+        trackerId={activeLogTrackerId}
+        onSuccess={() => {
+          fetchHabitLogsForDate(selectedDate)
+        }}
+      />
+
+      <HabitHistoryDialog
+        open={historyDialogOpen}
+        setOpen={setHistoryDialogOpen}
+        habit={activeHistoryHabit}
+      />
     </div>
   )
 }

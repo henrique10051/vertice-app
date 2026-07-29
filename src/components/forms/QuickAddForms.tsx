@@ -9,15 +9,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Trash2, Settings } from 'lucide-react'
 import useHabitsStore from '@/stores/useHabitsStore'
 import useFinancesStore, { type Transaction } from '@/stores/useFinancesStore'
 import { getTodayStr } from '@/lib/date-utils'
 import { DURATION_OPTIONS } from '@/lib/duration-options'
 import { useToast } from '@/hooks/use-toast'
+import { Switch } from '@/components/ui/switch'
+import { useAuth } from '@/hooks/use-auth'
+import { useCustomTrackersStore, sanitizeFieldName } from '@/stores/useCustomTrackersStore'
+import type { TrackerField, FieldType } from '@/services/custom-trackers-schema'
 
 export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
   const { addHabit } = useHabitsStore()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [name, setName] = useState('')
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('daily')
@@ -25,20 +30,77 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
   const [scheduledTime, setScheduledTime] = useState('')
   const [duration, setDuration] = useState(30)
 
+  // Custom fields state
+  const [hasMetrics, setHasMetrics] = useState(false)
+  const [fields, setFields] = useState<TrackerField[]>([])
+  const [fieldLabel, setFieldLabel] = useState('')
+  const [fieldType, setFieldType] = useState<FieldType>('number')
+  const [fieldRequired, setFieldRequired] = useState(true)
+
+  const handleAddField = () => {
+    if (!fieldLabel.trim()) {
+      toast({
+        title: 'Rótulo obrigatório',
+        description: 'Por favor, dê um rótulo ao campo de dados.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const cleanName = sanitizeFieldName(fieldLabel)
+    if (fields.some((f) => f.name === cleanName)) {
+      toast({
+        title: 'Nome de campo já existe',
+        description: 'Crie um campo com um nome diferente.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const newField: TrackerField = {
+      name: cleanName,
+      label: fieldLabel.trim(),
+      type: fieldType,
+      required: fieldRequired,
+    }
+
+    setFields([...fields, newField])
+    setFieldLabel('')
+    setFieldType('number')
+    setFieldRequired(true)
+  }
+
+  const handleRemoveField = (index: number) => {
+    setFields(fields.filter((_, i) => i !== index))
+  }
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name) return
-    const { error } = await addHabit(name, frequency, description, scheduledTime || null, duration)
+    const { error } = await addHabit(
+      name,
+      frequency,
+      description,
+      scheduledTime || null,
+      duration,
+      hasMetrics ? fields : [],
+      'card'
+    )
     if (error) {
       toast({ title: 'Erro ao criar hábito', description: error, variant: 'destructive' })
       return
     }
+
+    if (user) {
+      await useCustomTrackersStore.getState().loadFromBackend(user.id)
+    }
+
     toast({ title: 'Hábito criado!', description: `${name} foi adicionado.` })
     onSuccess()
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4 pt-4 animate-fade-in">
+    <form onSubmit={submit} className="space-y-4 pt-4 animate-fade-in max-h-[80vh] overflow-y-auto pr-1">
       <div className="space-y-2">
         <Label>Nome do Hábito</Label>
         <Input
@@ -100,6 +162,114 @@ export function HabitForm({ onSuccess }: { onSuccess: () => void }) {
       <p className="text-xs text-muted-foreground -mt-2">
         Definindo um horário, o hábito passa a aparecer na Agenda todos os dias.
       </p>
+
+      {/* Switch for custom metrics */}
+      <div className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-muted/20">
+        <div className="space-y-0.5">
+          <Label htmlFor="has-metrics" className="text-sm font-semibold cursor-pointer">
+            Métricas / Campos Personalizados
+          </Label>
+          <p className="text-[10px] text-muted-foreground">
+            Adicione campos para medir (ex: litros, páginas, calorias)
+          </p>
+        </div>
+        <Switch id="has-metrics" checked={hasMetrics} onCheckedChange={setHasMetrics} />
+      </div>
+
+      {/* Metrics builder */}
+      {hasMetrics && (
+        <div className="space-y-3 p-3 rounded-xl border border-border/50 bg-muted/10 animate-in fade-in duration-200">
+          <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+            <Settings size={12} /> Configurar Campos de Medição
+          </Label>
+
+          {/* Active fields list */}
+          {fields.length > 0 ? (
+            <div className="space-y-1.5 max-h-[150px] overflow-y-auto pr-1">
+              {fields.map((f, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between px-2.5 py-1.5 bg-card border border-border/50 rounded-lg text-xs"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold">{f.label}</span>
+                    <span className="text-[9px] bg-muted px-1.5 py-0.2 rounded font-mono text-muted-foreground">
+                      {f.type}
+                    </span>
+                    {f.required && (
+                      <span className="text-[8px] bg-destructive/10 text-destructive px-1.5 py-0.2 rounded font-bold">
+                        Obrigo.
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="w-5 h-5 text-muted-foreground hover:text-destructive rounded-full"
+                    onClick={() => handleRemoveField(idx)}
+                  >
+                    <Trash2 size={12} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic pl-1">
+              Nenhum campo adicionado. Adicione um abaixo.
+            </p>
+          )}
+
+          {/* Add field inline */}
+          <div className="space-y-2 pt-2 border-t border-border/40">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">Rótulo (ex: Peso, Litros)</Label>
+                <Input
+                  placeholder="Nome do campo"
+                  value={fieldLabel}
+                  onChange={(e) => setFieldLabel(e.target.value)}
+                  className="h-8 text-xs px-2.5"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">Tipo de Dado</Label>
+                <Select value={fieldType} onValueChange={(v: any) => setFieldType(v)}>
+                  <SelectTrigger className="h-8 text-xs px-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="string">Texto Simples</SelectItem>
+                    <SelectItem value="number">Número</SelectItem>
+                    <SelectItem value="boolean">Chave Sim/Não</SelectItem>
+                    <SelectItem value="date">Data</SelectItem>
+                    <SelectItem value="string[]">Lista de Tags</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between px-2 py-1 bg-card rounded-lg border border-border/40">
+              <span className="text-[10px] font-medium">Obrigatório</span>
+              <Switch
+                checked={fieldRequired}
+                onCheckedChange={setFieldRequired}
+                className="scale-75"
+              />
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleAddField}
+              className="w-full h-8 text-xs bg-primary/10 hover:bg-primary/15 text-primary border-none"
+              variant="outline"
+            >
+              <Plus size={12} className="mr-1" /> Adicionar Campo ao Esquema
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Button type="submit" className="w-full">
         Salvar Hábito
       </Button>

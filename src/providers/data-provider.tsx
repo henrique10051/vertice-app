@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import { getTodayStr } from '@/lib/date-utils'
+import type { TrackerField } from '@/services/custom-trackers-schema'
 
 export type Habit = {
   id: string
@@ -13,6 +14,8 @@ export type Habit = {
   scheduled_time: string | null
   duration_minutes: number
   created_at: string
+  validation?: TrackerField[]
+  view_type?: 'card' | 'list' | 'table'
 }
 
 export type Transaction = {
@@ -38,6 +41,8 @@ interface DataContextType {
     description?: string,
     scheduledTime?: string | null,
     durationMinutes?: number,
+    validation?: TrackerField[],
+    viewType?: 'card' | 'list' | 'table',
   ) => Promise<{ error: string | null }>
   updateHabit: (
     id: string,
@@ -92,6 +97,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       scheduled_time: t.scheduled_time,
       duration_minutes: t.duration_minutes || 0,
       created_at: t.created_at,
+      validation: t.validation || [],
+      view_type: t.view_type || 'card',
     }))
     setHabits(mappedHabits)
   }, [user])
@@ -216,6 +223,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       description?: string,
       scheduledTime?: string | null,
       durationMinutes?: number,
+      validation: TrackerField[] = [],
+      viewType: 'card' | 'list' | 'table' = 'card',
     ) => {
       if (!user) return { error: 'Usuário não autenticado.' }
       const { data, error } = await supabase
@@ -228,8 +237,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           description: description || '',
           scheduled_time: scheduledTime || null,
           duration_minutes: durationMinutes || 30,
-          validation: [],
-          view_type: 'card',
+          validation: validation,
+          view_type: viewType,
         })
         .select()
         .single()
@@ -244,6 +253,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           scheduled_time: data.scheduled_time,
           duration_minutes: data.duration_minutes || 0,
           created_at: data.created_at,
+          validation: data.validation || [],
+          view_type: data.view_type || 'card',
         }
         setHabits((prev) => [mapped, ...prev])
       }

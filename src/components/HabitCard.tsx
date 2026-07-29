@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { CheckCircle2, Circle, Trash2, Clock, Check } from 'lucide-react'
+import { CheckCircle2, Circle, Trash2, Clock, Check, ClipboardList } from 'lucide-react'
 import { HabitStreakDots } from '@/components/HabitStreakDots'
 import { DURATION_OPTIONS } from '@/lib/duration-options'
 import type { Habit } from '@/stores/useHabitsStore'
@@ -16,6 +16,8 @@ type HabitCardProps = {
   onToggle: () => void
   onDelete: () => void
   onScheduleChange: (time: string | null, durationMinutes: number) => void
+  onToggleCustom?: () => void
+  onShowHistory?: () => void
 }
 
 export function HabitCard({
@@ -26,6 +28,8 @@ export function HabitCard({
   onToggle,
   onDelete,
   onScheduleChange,
+  onToggleCustom,
+  onShowHistory,
 }: HabitCardProps) {
   const [editing, setEditing] = useState(false)
   const [draftTime, setDraftTime] = useState('')
@@ -46,7 +50,17 @@ export function HabitCard({
     <Card className="glass-card border-none rounded-2xl overflow-hidden group">
       <CardContent className="p-0">
         <div className="flex items-center gap-4 px-5 py-4">
-          <button onClick={onToggle} className="shrink-0">
+          <button
+            onClick={() => {
+              const hasFields = habit.validation && habit.validation.length > 0
+              if (hasFields && onToggleCustom) {
+                onToggleCustom()
+              } else {
+                onToggle()
+              }
+            }}
+            className="shrink-0"
+          >
             {isDone ? (
               <CheckCircle2 size={26} className="text-primary animate-check-pop" />
             ) : (
@@ -102,6 +116,16 @@ export function HabitCard({
           </div>
 
           <HabitStreakDots streak={streak} recentDays={recentDays} />
+
+          {habit.validation && habit.validation.length > 0 && onShowHistory && (
+            <button
+              onClick={onShowHistory}
+              className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+              title="Visualizar métricas e histórico"
+            >
+              <ClipboardList size={16} />
+            </button>
+          )}
 
           <button
             onClick={onDelete}
