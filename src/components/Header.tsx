@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Plus, Mountain, User, LogOut } from 'lucide-react'
+import { Plus, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -57,9 +57,7 @@ export function Header() {
     <header className="h-20 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-30 bg-background/70 backdrop-blur-xl border-b border-border/70">
       <div>
         <h1 className="font-display text-2xl font-bold md:hidden flex items-center gap-2">
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary text-primary-foreground">
-            <Mountain size={16} strokeWidth={2.5} />
-          </span>
+          <img src="/logo.png" alt="Vértice" className="w-7 h-7 rounded-lg" />
           Vértice
         </h1>
         <div className="hidden md:block">

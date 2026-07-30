@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom'
-import { Mountain, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-background topo-lines p-4">
       <div className="w-full max-w-2xl mx-auto py-12">
         <div className="flex items-center gap-3 mb-8">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground shadow-glow">
-            <Mountain size={20} strokeWidth={2.5} />
-          </div>
+          <img src="/logo.png" alt="Vértice" className="w-10 h-10 rounded-xl shadow-glow" />
           <h1 className="font-display text-2xl font-bold tracking-tight">Vértice</h1>
         </div>
 

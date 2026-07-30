@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Mountain,
   ArrowRight,
   ArrowLeft,
   Loader2,
@@ -118,9 +117,11 @@ export default function Onboarding() {
         <div className="bg-card rounded-2xl shadow-elevation p-8 border border-border/70">
           {step === 1 && (
             <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-glow">
-                <Mountain size={30} strokeWidth={2.5} />
-              </div>
+              <img
+                src="/logo.png"
+                alt="Vértice"
+                className="w-16 h-16 rounded-2xl mb-4 shadow-glow mx-auto"
+              />
               <h1 className="text-2xl font-bold">Bem-vindo ao Vértice!</h1>
               <p className="text-muted-foreground">
                 Vamos configurar seu perfil para uma experiência personalizada.

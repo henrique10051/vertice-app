@@ -9,7 +9,6 @@ import {
   Bot,
   PanelLeftClose,
   PanelLeftOpen,
-  Mountain,
   ShoppingCart,
   Timer,
   CalendarDays,
@@ -48,17 +47,11 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-6 h-20">
         {!sidebarCollapsed && (
           <span className="font-display text-lg font-bold flex items-center gap-2.5 tracking-tight">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
-              <Mountain size={18} strokeWidth={2.5} />
-            </span>
+            <img src="/logo.png" alt="Vértice" className="w-8 h-8 rounded-lg" />
             Vértice
           </span>
         )}
-        {sidebarCollapsed && (
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
-            <Mountain size={18} strokeWidth={2.5} />
-          </span>
-        )}
+        {sidebarCollapsed && <img src="/logo.png" alt="Vértice" className="w-8 h-8 rounded-lg" />}
         <button
           onClick={toggleSidebar}
           className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-lg hover:bg-muted/50"
