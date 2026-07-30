@@ -20,6 +20,8 @@ export interface MentorResponse {
   habits?: ProposedHabit[]
   questionIndex?: number
   suggestedOptions?: string[]
+  limitReached?: boolean
+  usage?: { used: number; limit: number; planType: string }
 }
 
 const FALLBACK_QUESTIONS: { content: string; options: string[] }[] = [

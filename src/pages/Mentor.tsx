@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, Target, Repeat, Rocket, Brain, TrendingUp, Pencil } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Bot, Send, Target, Repeat, Rocket, Brain, TrendingUp, Pencil, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -43,6 +44,7 @@ export default function Mentor() {
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState(false)
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+  const [limitReached, setLimitReached] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -52,6 +54,14 @@ export default function Mentor() {
   const isMultiTopicQuestion = questionIndex === 1
 
   const processResponse = (resp: MentorResponse, currentMessages: ChatMessage[]) => {
+    if (resp.limitReached) {
+      setLimitReached(true)
+      setCurrentQuestion(null)
+      setCurrentOptions([])
+      setIsLoading(false)
+      return
+    }
+
     const updatedMessages: ChatMessage[] = [
       ...currentMessages,
       { role: 'assistant', content: resp.content },
@@ -159,6 +169,7 @@ export default function Mentor() {
     setCurrentOptions([])
     setShowOtherInput(false)
     setInterviewStarted(false)
+    setLimitReached(false)
   }
 
   const progressStep = Math.min(questionIndex, TOTAL_QUESTIONS)
@@ -218,7 +229,27 @@ export default function Mentor() {
         </Card>
       )}
 
-      {interviewStarted && !roadmap && (
+      {interviewStarted && !roadmap && limitReached && (
+        <Card className="rounded-xl p-8 md:p-10 text-center animate-fade-in-up">
+          <div className="flex justify-center mb-4">
+            <div className="p-4 bg-primary/10 rounded-xl">
+              <Lock className="text-primary" size={40} />
+            </div>
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-2">
+            Limite mensal do Mentor IA atingido
+          </h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Você usou todas as mensagens de IA disponíveis no seu plano este mês. Assine um plano
+            com mais mensagens para continuar a entrevista.
+          </p>
+          <Button asChild size="lg" className="rounded-full text-base font-semibold px-8">
+            <Link to="/planos">Ver planos</Link>
+          </Button>
+        </Card>
+      )}
+
+      {interviewStarted && !roadmap && !limitReached && (
         <Card className="rounded-xl p-6 md:p-8 animate-fade-in-up">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">

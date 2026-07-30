@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { checkAndConsumeAiUsage } from '../_shared/ai-usage.ts'
 
 interface AIMentorContext {
   habits: { title: string; is_completed: boolean; frequency: string }[]
@@ -438,6 +439,27 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const usage = await checkAndConsumeAiUsage(req)
+    if (!usage.ok) {
+      return new Response(JSON.stringify({ error: usage.error }), {
+        status: usage.status,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      })
+    }
+    if (!usage.result.allowed) {
+      return new Response(
+        JSON.stringify({
+          limitReached: true,
+          usage: {
+            used: usage.result.used,
+            limit: usage.result.limit,
+            planType: usage.result.planType,
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+      )
+    }
+
     const body = await req.json()
 
     if (body.mode === 'interview') {

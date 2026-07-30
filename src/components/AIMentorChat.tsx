@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { X, Send, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ export function AIMentorChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [limitReached, setLimitReached] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const { habits } = useHabitsStore()
@@ -73,15 +75,16 @@ export function AIMentorChat() {
   }
 
   const send = async (text: string) => {
-    if (!text.trim() || loading) return
+    if (!text.trim() || loading || limitReached) return
     const userMsg: Message = { role: 'user', content: text }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
     setLoading(true)
 
     try {
-      const response = await fetchAIMentorInsight(text, buildContext())
-      setMessages((prev) => [...prev, { role: 'assistant', content: response }])
+      const insight = await fetchAIMentorInsight(text, buildContext())
+      setMessages((prev) => [...prev, { role: 'assistant', content: insight.response }])
+      if (insight.limitReached) setLimitReached(true)
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -157,18 +160,31 @@ export function AIMentorChat() {
           </>
         )}
       </div>
-      <div className="p-3 border-t flex gap-2">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && send(input)}
-          placeholder="Pergunte algo..."
-          disabled={loading}
-        />
-        <Button onClick={() => send(input)} disabled={loading || !input.trim()} size="icon">
-          <Send size={18} />
-        </Button>
-      </div>
+      {limitReached ? (
+        <div className="p-3 border-t space-y-2">
+          <p className="text-xs text-muted-foreground text-center">
+            Você usou todas as mensagens do Mentor IA disponíveis este mês.
+          </p>
+          <Button asChild className="w-full">
+            <Link to="/planos" onClick={() => setOpen(false)}>
+              Ver planos e continuar com a IA
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="p-3 border-t flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && send(input)}
+            placeholder="Pergunte algo..."
+            disabled={loading}
+          />
+          <Button onClick={() => send(input)} disabled={loading || !input.trim()} size="icon">
+            <Send size={18} />
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { checkAndConsumeAiUsage } from '../_shared/ai-usage.ts'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -230,6 +231,29 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const usage = await checkAndConsumeAiUsage(req)
+    if (!usage.ok) {
+      return new Response(JSON.stringify({ error: usage.error }), {
+        status: usage.status,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      })
+    }
+    if (!usage.result.allowed) {
+      return new Response(
+        JSON.stringify({
+          type: 'question',
+          limitReached: true,
+          usage: {
+            used: usage.result.used,
+            limit: usage.result.limit,
+            planType: usage.result.planType,
+          },
+          content: 'Você atingiu o limite de mensagens da IA neste mês.',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+      )
+    }
+
     const { messages, questionIndex } = (await req.json()) as {
       messages: ChatMessage[]
       questionIndex?: number

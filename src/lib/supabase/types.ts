@@ -1,11 +1,16 @@
-// AVOID UPDATING THIS FILE DIRECTLY. It is automatically generated.
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5'
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -13,34 +18,75 @@ export type Database = {
         Row: {
           category: string
           created_at: string | null
+          days_of_week: string[] | null
           description: string | null
           due_date: string
           duration_minutes: number
           id: string
+          is_recurring: boolean
+          routine_period: string | null
           status: string | null
           title: string
+          tracker_id: string | null
           user_id: string
         }
         Insert: {
           category?: string
           created_at?: string | null
+          days_of_week?: string[] | null
           description?: string | null
           due_date: string
           duration_minutes?: number
           id?: string
+          is_recurring?: boolean
+          routine_period?: string | null
           status?: string | null
           title: string
+          tracker_id?: string | null
           user_id: string
         }
         Update: {
           category?: string
           created_at?: string | null
+          days_of_week?: string[] | null
           description?: string | null
           due_date?: string
           duration_minutes?: number
           id?: string
+          is_recurring?: boolean
+          routine_period?: string | null
           status?: string | null
           title?: string
+          tracker_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_tasks_tracker_id_fkey"
+            columns: ["tracker_id"]
+            isOneToOne: false
+            referencedRelation: "custom_trackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_usage: {
+        Row: {
+          message_count: number
+          period_month: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          message_count?: number
+          period_month: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          message_count?: number
+          period_month?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -69,6 +115,168 @@ export type Database = {
         }
         Relationships: []
       }
+      budgets: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          id: string
+          month: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          id?: string
+          month: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          id?: string
+          month?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      custom_tracker_entries: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          task_id: string | null
+          tracker_id: string
+          updated_at: string
+          user_id: string
+          values: Json
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          task_id?: string | null
+          tracker_id: string
+          updated_at?: string
+          user_id: string
+          values: Json
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          task_id?: string | null
+          tracker_id?: string
+          updated_at?: string
+          user_id?: string
+          values?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_tracker_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_tracker_entries_tracker_id_fkey"
+            columns: ["tracker_id"]
+            isOneToOne: false
+            referencedRelation: "custom_trackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_trackers: {
+        Row: {
+          category: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          fields_schema: Json | null
+          frequency: string | null
+          habit_id: string | null
+          id: string
+          is_habit: boolean
+          name: string
+          scheduled_time: string | null
+          updated_at: string | null
+          user_id: string
+          validation: Json | null
+          view_type: string | null
+        }
+        Insert: {
+          category?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          fields_schema?: Json | null
+          frequency?: string | null
+          habit_id?: string | null
+          id?: string
+          is_habit?: boolean
+          name: string
+          scheduled_time?: string | null
+          updated_at?: string | null
+          user_id: string
+          validation?: Json | null
+          view_type?: string | null
+        }
+        Update: {
+          category?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          fields_schema?: Json | null
+          frequency?: string | null
+          habit_id?: string | null
+          id?: string
+          is_habit?: boolean
+          name?: string
+          scheduled_time?: string | null
+          updated_at?: string | null
+          user_id?: string
+          validation?: Json | null
+          view_type?: string | null
+        }
+        Relationships: []
+      }
+      exercises: {
+        Row: {
+          created_at: string | null
+          id: string
+          muscle_group: string | null
+          name: string
+          user_id: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          muscle_group?: string | null
+          name: string
+          user_id?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          muscle_group?: string | null
+          name?: string
+          user_id?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       finance_categories: {
         Row: {
           created_at: string | null
@@ -86,74 +294,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      habit_logs: {
-        Row: {
-          completed_at: string | null
-          date: string
-          habit_id: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          date?: string
-          habit_id: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          date?: string
-          habit_id?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'habit_logs_habit_id_fkey'
-            columns: ['habit_id']
-            isOneToOne: false
-            referencedRelation: 'habits'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      habits: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          duration_minutes: number
-          frequency: string | null
-          id: string
-          is_completed: boolean | null
-          scheduled_time: string | null
-          title: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          duration_minutes?: number
-          frequency?: string | null
-          id?: string
-          is_completed?: boolean | null
-          scheduled_time?: string | null
-          title: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          duration_minutes?: number
-          frequency?: string | null
-          id?: string
-          is_completed?: boolean | null
-          scheduled_time?: string | null
-          title?: string
           user_id?: string
         }
         Relationships: []
@@ -185,6 +325,42 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           water_intake_ml?: number | null
+        }
+        Relationships: []
+      }
+      installment_purchases: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          installment_amount: number
+          installments_total: number
+          start_month: string
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          installment_amount: number
+          installments_total: number
+          start_month: string
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          installment_amount?: number
+          installments_total?: number
+          start_month?: string
+          total_amount?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -221,6 +397,24 @@ export type Database = {
           name?: string
           unit?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      news_cache: {
+        Row: {
+          articles: Json
+          category: string
+          fetched_at: string
+        }
+        Insert: {
+          articles?: Json
+          category: string
+          fetched_at?: string
+        }
+        Update: {
+          articles?: Json
+          category?: string
+          fetched_at?: string
         }
         Relationships: []
       }
@@ -299,11 +493,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'pomodoro_logs_habit_id_fkey'
-            columns: ['habit_id']
+            foreignKeyName: "pomodoro_logs_habit_id_fkey"
+            columns: ["habit_id"]
             isOneToOne: false
-            referencedRelation: 'habits'
-            referencedColumns: ['id']
+            referencedRelation: "custom_trackers"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -406,13 +600,46 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'push_subscriptions_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
+      }
+      reading_list: {
+        Row: {
+          author: string | null
+          cover_url: string | null
+          created_at: string | null
+          google_books_id: string | null
+          id: string
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          google_books_id?: string | null
+          id?: string
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          author?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          google_books_id?: string | null
+          id?: string
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       reminder_logs: {
         Row: {
@@ -477,6 +704,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tracker_logs: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          task_id: string | null
+          tracker_id: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          task_id?: string | null
+          tracker_id: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          task_id?: string | null
+          tracker_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracker_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracker_logs_tracker_id_fkey"
+            columns: ["tracker_id"]
+            isOneToOne: false
+            referencedRelation: "custom_trackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -510,193 +779,126 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'transactions_user_id_fkey'
-            columns: ['user_id']
+            foreignKeyName: "transactions_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      exercises: {
-        Row: {
-          id: string
-          user_id: string | null
-          name: string
-          muscle_group: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          name: string
-          muscle_group?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          name?: string
-          muscle_group?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      workout_sessions: {
-        Row: {
-          id: string
-          user_id: string
-          date: string
-          notes: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          date?: string
-          notes?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          date?: string
-          notes?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      workout_sets: {
-        Row: {
-          id: string
-          user_id: string
-          session_id: string
-          exercise_id: string
-          set_number: number
-          reps: number
-          weight_kg: number
-          rpe: number | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          session_id: string
-          exercise_id: string
-          set_number?: number
-          reps: number
-          weight_kg: number
-          rpe?: number | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          session_id?: string
-          exercise_id?: string
-          set_number?: number
-          reps?: number
-          weight_kg?: number
-          rpe?: number | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'workout_sets_session_id_fkey'
-            columns: ['session_id']
-            isOneToOne: false
-            referencedRelation: 'workout_sessions'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'workout_sets_exercise_id_fkey'
-            columns: ['exercise_id']
-            isOneToOne: false
-            referencedRelation: 'exercises'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
       workout_plans: {
         Row: {
+          created_at: string | null
           id: string
-          user_id: string
-          summary: string
           items: Json
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
           summary: string
-          items?: Json
+          user_id: string
+        }
+        Insert: {
           created_at?: string | null
+          id?: string
+          items?: Json
+          summary: string
+          user_id: string
         }
         Update: {
+          created_at?: string | null
           id?: string
-          user_id?: string
+          items?: Json
           summary?: string
-          items?: Json
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      reading_list: {
-        Row: {
-          id: string
-          user_id: string
-          google_books_id: string | null
-          title: string
-          author: string | null
-          cover_url: string | null
-          status: string
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          google_books_id?: string | null
-          title: string
-          author?: string | null
-          cover_url?: string | null
-          status?: string
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
           user_id?: string
-          google_books_id?: string | null
-          title?: string
-          author?: string | null
-          cover_url?: string | null
-          status?: string
-          created_at?: string | null
         }
         Relationships: []
       }
-      news_cache: {
+      workout_sessions: {
         Row: {
-          category: string
-          articles: Json
-          fetched_at: string
+          created_at: string | null
+          date: string
+          id: string
+          notes: string | null
+          user_id: string
         }
         Insert: {
-          category: string
-          articles?: Json
-          fetched_at?: string
+          created_at?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          user_id: string
         }
         Update: {
-          category?: string
-          articles?: Json
-          fetched_at?: string
+          created_at?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
         }
         Relationships: []
+      }
+      workout_sets: {
+        Row: {
+          created_at: string | null
+          exercise_id: string
+          id: string
+          reps: number
+          rpe: number | null
+          session_id: string
+          set_number: number
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string | null
+          exercise_id: string
+          id?: string
+          reps: number
+          rpe?: number | null
+          session_id: string
+          set_number?: number
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string | null
+          exercise_id?: string
+          id?: string
+          reps?: number
+          rpe?: number | null
+          session_id?: string
+          set_number?: number
+          user_id?: string
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_sets_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_sets_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "workout_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      consume_ai_usage: {
+        Args: { p_limit: number }
+        Returns: {
+          allowed: boolean
+          limit: number
+          used: number
+        }[]
+      }
       log_ai_usage: {
         Args: { p_feature_type: string; p_tokens_used?: number }
         Returns: undefined
@@ -711,31 +913,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -744,23 +948,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -769,23 +973,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -794,36 +998,36 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
