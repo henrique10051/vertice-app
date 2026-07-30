@@ -440,36 +440,36 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          abacatepay_bill_id: string | null
+          abacatepay_status: string | null
           created_at: string | null
           current_period_end: string | null
           current_period_start: string | null
           id: string
-          mp_preapproval_id: string | null
-          mp_status: string | null
           plan_type: string
           status: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          abacatepay_bill_id?: string | null
+          abacatepay_status?: string | null
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          mp_preapproval_id?: string | null
-          mp_status?: string | null
           plan_type?: string
           status?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          abacatepay_bill_id?: string | null
+          abacatepay_status?: string | null
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          mp_preapproval_id?: string | null
-          mp_status?: string | null
           plan_type?: string
           status?: string
           updated_at?: string | null

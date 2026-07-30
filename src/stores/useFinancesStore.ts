@@ -1,6 +1,11 @@
-import { useData, type Transaction } from '@/providers/data-provider'
+import {
+  useData,
+  type Transaction,
+  type Budget,
+  type InstallmentPurchase,
+} from '@/providers/data-provider'
 
-export type { Transaction }
+export type { Transaction, Budget, InstallmentPurchase }
 
 export default function useFinancesStore() {
   const {
@@ -12,6 +17,12 @@ export default function useFinancesStore() {
     financeCategories,
     addFinanceCategory,
     deleteFinanceCategory,
+    budgets,
+    upsertBudget,
+    deleteBudget,
+    installmentPurchases,
+    addInstallmentPurchase,
+    deleteInstallmentPurchase,
   } = useData()
   return {
     transactions,
@@ -22,5 +33,11 @@ export default function useFinancesStore() {
     financeCategories,
     addFinanceCategory,
     deleteFinanceCategory,
+    budgets,
+    upsertBudget,
+    deleteBudget,
+    installmentPurchases,
+    addInstallmentPurchase,
+    deleteInstallmentPurchase,
   }
 }

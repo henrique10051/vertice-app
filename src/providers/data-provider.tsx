@@ -29,6 +29,28 @@ export type Transaction = {
   created_at: string
 }
 
+export type Budget = {
+  id: string
+  user_id: string
+  month: string // "YYYY-MM-01"
+  type: 'income' | 'expense'
+  category: string
+  amount: number
+  created_at: string
+}
+
+export type InstallmentPurchase = {
+  id: string
+  user_id: string
+  description: string
+  category: string
+  total_amount: number
+  installments_total: number
+  installment_amount: number
+  start_month: string // "YYYY-MM-01"
+  created_at: string
+}
+
 interface DataContextType {
   habits: Habit[]
   transactions: Transaction[]
@@ -58,6 +80,14 @@ interface DataContextType {
   financeCategories: string[]
   addFinanceCategory: (name: string) => Promise<void>
   deleteFinanceCategory: (name: string) => Promise<void>
+  budgets: Budget[]
+  upsertBudget: (b: Omit<Budget, 'id' | 'user_id' | 'created_at'>) => Promise<void>
+  deleteBudget: (id: string) => Promise<void>
+  installmentPurchases: InstallmentPurchase[]
+  addInstallmentPurchase: (
+    p: Omit<InstallmentPurchase, 'id' | 'user_id' | 'created_at'>,
+  ) => Promise<void>
+  deleteInstallmentPurchase: (id: string) => Promise<void>
   refetchHabits: () => Promise<void>
   refetchTransactions: () => Promise<void>
   fetchHabitLogsForDate: (date: string) => Promise<void>
@@ -78,6 +108,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [habitLogsByDate, setHabitLogsByDate] = useState<Record<string, string[]>>({})
   const [financeCategories, setFinanceCategories] = useState<string[]>([])
+  const [budgets, setBudgets] = useState<Budget[]>([])
+  const [installmentPurchases, setInstallmentPurchases] = useState<InstallmentPurchase[]>([])
 
   const fetchHabits = useCallback(async () => {
     if (!user) return
@@ -156,18 +188,49 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setFinanceCategories((data || []).map((c) => c.name))
   }, [user])
 
+  const fetchBudgets = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('budgets')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('month', { ascending: true })
+    setBudgets(data || [])
+  }, [user])
+
+  const fetchInstallmentPurchases = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('installment_purchases')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('start_month', { ascending: false })
+    setInstallmentPurchases(data || [])
+  }, [user])
+
   useEffect(() => {
     if (user) {
       fetchHabits()
       fetchTransactions()
       fetchFinanceCategories()
+      fetchBudgets()
+      fetchInstallmentPurchases()
     } else {
       setHabits([])
       setTransactions([])
       setHabitLogsByDate({})
       setFinanceCategories([])
+      setBudgets([])
+      setInstallmentPurchases([])
     }
-  }, [user, fetchHabits, fetchTransactions, fetchFinanceCategories])
+  }, [
+    user,
+    fetchHabits,
+    fetchTransactions,
+    fetchFinanceCategories,
+    fetchBudgets,
+    fetchInstallmentPurchases,
+  ])
 
   const toggleHabitForDate = useCallback(
     async (id: string, date: string) => {
@@ -332,6 +395,47 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [user],
   )
 
+  const upsertBudget = useCallback(
+    async (b: Omit<Budget, 'id' | 'user_id' | 'created_at'>) => {
+      if (!user) return
+      const { data } = await supabase
+        .from('budgets')
+        .upsert({ ...b, user_id: user.id }, { onConflict: 'user_id,month,type,category' })
+        .select()
+        .single()
+      if (data) {
+        setBudgets((prev) => {
+          const existing = prev.filter((x) => x.id !== data.id)
+          return [...existing, data]
+        })
+      }
+    },
+    [user],
+  )
+
+  const deleteBudget = useCallback(async (id: string) => {
+    setBudgets((prev) => prev.filter((b) => b.id !== id))
+    await supabase.from('budgets').delete().eq('id', id)
+  }, [])
+
+  const addInstallmentPurchase = useCallback(
+    async (p: Omit<InstallmentPurchase, 'id' | 'user_id' | 'created_at'>) => {
+      if (!user) return
+      const { data } = await supabase
+        .from('installment_purchases')
+        .insert({ ...p, user_id: user.id })
+        .select()
+        .single()
+      if (data) setInstallmentPurchases((prev) => [data, ...prev])
+    },
+    [user],
+  )
+
+  const deleteInstallmentPurchase = useCallback(async (id: string) => {
+    setInstallmentPurchases((prev) => prev.filter((p) => p.id !== id))
+    await supabase.from('installment_purchases').delete().eq('id', id)
+  }, [])
+
   return (
     <DataContext.Provider
       value={{
@@ -349,6 +453,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         financeCategories,
         addFinanceCategory,
         deleteFinanceCategory,
+        budgets,
+        upsertBudget,
+        deleteBudget,
+        installmentPurchases,
+        addInstallmentPurchase,
+        deleteInstallmentPurchase,
         refetchHabits: fetchHabits,
         refetchTransactions: fetchTransactions,
         fetchHabitLogsForDate,

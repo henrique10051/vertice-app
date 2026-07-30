@@ -2,9 +2,12 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
-const PLAN_PRICES: Record<string, number> = {
-  pro: 19.9,
-  premium: 39.9,
+// Product IDs created once via `deno run scripts/setup-abacatepay-products.ts`
+// (see that script for the price/cycle each maps to) and stored as env vars
+// because AbacatePay generates the id when the product is created.
+const PLAN_PRODUCT_ENV: Record<string, string> = {
+  pro: 'ABACATEPAY_PRODUCT_PRO',
+  premium: 'ABACATEPAY_PRODUCT_PREMIUM',
 }
 
 Deno.serve(async (req: Request) => {
@@ -49,8 +52,8 @@ Deno.serve(async (req: Request) => {
           user_id: user.id,
           plan_type: 'free',
           status: 'active',
-          mp_preapproval_id: null,
-          mp_status: null,
+          abacatepay_bill_id: null,
+          abacatepay_status: null,
           current_period_end: null,
           updated_at: new Date().toISOString(),
         },
@@ -63,75 +66,63 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const price = PLAN_PRICES[planId]
-    if (!price) {
-      return new Response(JSON.stringify({ error: 'Invalid plan' }), {
+    const productEnvVar = PLAN_PRODUCT_ENV[planId]
+    const productId = productEnvVar ? Deno.env.get(productEnvVar) : undefined
+    if (!productId) {
+      return new Response(JSON.stringify({ error: 'Invalid plan or product not configured' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       })
     }
 
-    const mpAccessToken = Deno.env.get('MERCADOPAGO_ACCESS_TOKEN')
-    if (!mpAccessToken) {
+    const abacatepayApiKey = Deno.env.get('ABACATEPAY_API_KEY')
+    if (!abacatepayApiKey) {
       return new Response(
-        JSON.stringify({ error: 'Billing not configured (missing MERCADOPAGO_ACCESS_TOKEN)' }),
+        JSON.stringify({ error: 'Billing not configured (missing ABACATEPAY_API_KEY)' }),
         { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
       )
     }
 
     const appUrl = Deno.env.get('APP_URL') || 'https://vertice.app'
-    // Mercado Pago sandbox rejects preapprovals where the payer isn't a test
-    // user (see ROADMAP: "Both payer and collector must be real or test
-    // users"). MERCADOPAGO_TEST_PAYER_EMAIL is only set while running against
-    // sandbox credentials; unset it (or swap to a production access token)
-    // and this falls back to the real user's email automatically.
-    const payerEmail = Deno.env.get('MERCADOPAGO_TEST_PAYER_EMAIL') || user.email
 
-    const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
+    const abacatepayResponse = await fetch('https://api.abacatepay.com/v2/subscriptions/create', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${mpAccessToken}`,
+        Authorization: `Bearer ${abacatepayApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        reason: `Vértice ${planId === 'premium' ? 'Premium' : 'Pro'}`,
-        external_reference: user.id,
-        payer_email: payerEmail,
-        back_url: `${appUrl}/planos`,
-        auto_recurring: {
-          frequency: 1,
-          frequency_type: 'months',
-          transaction_amount: price,
-          currency_id: 'BRL',
-        },
-        status: 'pending',
+        items: [{ id: productId, quantity: 1 }],
+        externalId: user.id,
+        returnUrl: `${appUrl}/planos`,
+        completionUrl: `${appUrl}/planos`,
       }),
     })
 
-    if (!mpResponse.ok) {
-      const errText = await mpResponse.text()
-      return new Response(JSON.stringify({ error: `Mercado Pago error: ${errText}` }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      })
+    const result = await abacatepayResponse.json()
+    if (!abacatepayResponse.ok || !result.success) {
+      return new Response(
+        JSON.stringify({ error: `AbacatePay error: ${result.error ?? (await abacatepayResponse.text())}` }),
+        { status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders } },
+      )
     }
 
-    const preapproval = await mpResponse.json()
+    const bill = result.data
 
     const { error: dbError } = await serviceClient.from('subscriptions').upsert(
       {
         user_id: user.id,
         plan_type: planId,
         status: 'trialing',
-        mp_preapproval_id: preapproval.id,
-        mp_status: preapproval.status,
+        abacatepay_bill_id: bill.id,
+        abacatepay_status: bill.status,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id' },
     )
     if (dbError) throw dbError
 
-    return new Response(JSON.stringify({ success: true, init_point: preapproval.init_point }), {
+    return new Response(JSON.stringify({ success: true, init_point: bill.url }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     })
   } catch (err) {

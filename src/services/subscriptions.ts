@@ -16,7 +16,7 @@ export async function startCheckout(planId: string) {
   const { data, error } = await supabase.functions.invoke<{
     success: boolean
     init_point: string | null
-  }>('mercadopago-checkout', { body: { planId } })
+  }>('abacatepay-checkout', { body: { planId } })
   if (error) return { initPoint: null, error }
   return { initPoint: data?.init_point ?? null, error: null }
 }

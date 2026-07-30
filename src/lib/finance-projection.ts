@@ -1,4 +1,4 @@
-import type { Transaction } from '@/stores/useFinancesStore'
+import type { Transaction, InstallmentPurchase } from '@/stores/useFinancesStore'
 
 export interface MonthlyProjection {
   projectedIncome: number
@@ -79,4 +79,37 @@ export function computeMonthlyProjection(transactions: Transaction[]): MonthlyPr
     monthsUsed,
     byCategory,
   }
+}
+
+export interface ActiveInstallment {
+  purchase: InstallmentPurchase
+  installmentNumber: number // 1-based
+}
+
+function monthsBetween(fromMonthKey: string, toMonthKey: string) {
+  const [fy, fm] = fromMonthKey.split('-').map(Number)
+  const [ty, tm] = toMonthKey.split('-').map(Number)
+  return (ty - fy) * 12 + (tm - fm)
+}
+
+/** Purchases whose installment plan still charges in the given "YYYY-MM" month. */
+export function getActiveInstallments(
+  purchases: InstallmentPurchase[],
+  targetMonthKey: string,
+): ActiveInstallment[] {
+  return purchases
+    .map((purchase) => {
+      const idx = monthsBetween(monthKey(purchase.start_month), targetMonthKey)
+      return { purchase, installmentNumber: idx + 1 }
+    })
+    .filter(({ installmentNumber, purchase }) =>
+      installmentNumber >= 1 && installmentNumber <= purchase.installments_total,
+    )
+}
+
+export function sumActiveInstallments(purchases: InstallmentPurchase[], targetMonthKey: string) {
+  return getActiveInstallments(purchases, targetMonthKey).reduce(
+    (sum, { purchase }) => sum + purchase.installment_amount,
+    0,
+  )
 }
