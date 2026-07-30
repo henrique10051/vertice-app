@@ -84,7 +84,7 @@ function RequireOnboarding({ children }: { children: ReactNode }) {
 }
 
 const App = () => (
-  <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false}>
+  <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem={false}>
     <AuthProvider>
       <DataProvider>
         <HealthProvider>

@@ -11,6 +11,8 @@ import useFinancesStore from '@/stores/useFinancesStore'
 import useGoalsStore from '@/stores/useGoalsStore'
 import useHealthStore from '@/stores/useHealthStore'
 import { calculateDailyCalories, calculateWaterGoal } from '@/lib/health-utils'
+import { AiUsageBadge } from '@/components/AiUsageBadge'
+import { useAiUsage } from '@/hooks/use-ai-usage'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -22,6 +24,7 @@ export function AIMentorChat() {
   const [limitReached, setLimitReached] = useState(false)
   const [freeTierBlocked, setFreeTierBlocked] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const aiUsage = useAiUsage()
 
   const { habits } = useHabitsStore()
   const { transactions } = useFinancesStore()
@@ -88,6 +91,9 @@ export function AIMentorChat() {
       if (insight.limitReached) {
         setLimitReached(true)
         setFreeTierBlocked(insight.usage?.limit === 0)
+        aiUsage.refresh()
+      } else {
+        aiUsage.consumeLocal()
       }
     } catch {
       setMessages((prev) => [
@@ -113,16 +119,19 @@ export function AIMentorChat() {
   return (
     <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-[calc(100%-2rem)] md:w-96 h-[60vh] md:h-[500px] bg-background rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-fade-in-up">
       <div className="flex items-center justify-between p-4 border-b bg-primary/5">
-        <div className="flex items-center gap-2">
-          <Sparkles size={20} className="text-primary" />
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles size={20} className="text-primary shrink-0" />
           <span className="font-bold">Mentor IA</span>
         </div>
-        <button
-          onClick={() => setOpen(false)}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <X size={20} />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <AiUsageBadge status={aiUsage.status} loading={aiUsage.loading} compact />
+          <button
+            onClick={() => setOpen(false)}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
       <div className="flex-1 p-4 overflow-y-auto space-y-3" ref={scrollRef}>
         {messages.length === 0 ? (

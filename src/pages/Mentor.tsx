@@ -18,6 +18,8 @@ import {
 } from '@/services/mentor-chat'
 import { MentorMultiTopicInput } from '@/components/MentorMultiTopicInput'
 import { MentorRoadmapPreview } from '@/components/MentorRoadmapPreview'
+import { AiUsageBadge } from '@/components/AiUsageBadge'
+import { useAiUsage } from '@/hooks/use-ai-usage'
 
 const TOTAL_QUESTIONS = 5
 
@@ -47,6 +49,7 @@ export default function Mentor() {
   const [limitReached, setLimitReached] = useState(false)
   const [usageInfo, setUsageInfo] = useState<{ used: number; limit: number } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const aiUsage = useAiUsage()
 
   useEffect(() => {
     if (showOtherInput) inputRef.current?.focus()
@@ -61,8 +64,11 @@ export default function Mentor() {
       setCurrentQuestion(null)
       setCurrentOptions([])
       setIsLoading(false)
+      aiUsage.refresh()
       return
     }
+
+    aiUsage.consumeLocal()
 
     const updatedMessages: ChatMessage[] = [
       ...currentMessages,
@@ -178,17 +184,20 @@ export default function Mentor() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-xl">
-            <Bot className="text-primary" size={28} />
-          </div>
-          Mentor IA
-        </h1>
-        <p className="text-muted-foreground">
-          Faça uma entrevista guiada e receba um plano de crescimento personalizado com técnica
-          Pomodoro.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <Bot className="text-primary" size={28} />
+            </div>
+            Mentor IA
+          </h1>
+          <p className="text-muted-foreground">
+            Faça uma entrevista guiada e receba um plano de crescimento personalizado com técnica
+            Pomodoro.
+          </p>
+        </div>
+        <AiUsageBadge status={aiUsage.status} loading={aiUsage.loading} className="shrink-0" />
       </div>
 
       {!interviewStarted && !roadmap && (

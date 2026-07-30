@@ -42,6 +42,8 @@ import {
   Bell,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useAiUsage } from '@/hooks/use-ai-usage'
+import { cn } from '@/lib/utils'
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth()
@@ -56,6 +58,7 @@ export default function ProfilePage() {
   const [deleting, setDeleting] = useState(false)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushBusy, setPushBusy] = useState(false)
+  const aiUsage = useAiUsage()
 
   useEffect(() => {
     if (!user) return
@@ -266,6 +269,62 @@ export default function ProfilePage() {
                   <Crown size={18} /> Upgrade para Premium
                 </Link>
               </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-card rounded-3xl border-none shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles size={20} className="text-primary" />
+            Mentor IA
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {aiUsage.loading ? (
+            <p className="text-sm text-muted-foreground">Carregando uso do mês...</p>
+          ) : !aiUsage.status || aiUsage.status.limit === 0 ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/50 border border-border">
+                <Sparkles className="text-muted-foreground shrink-0" size={24} />
+                <div>
+                  <p className="font-semibold">Mentor IA é exclusivo dos planos pagos</p>
+                  <p className="text-sm text-muted-foreground">
+                    Assine o Pro ou Premium para conversar com o Mentor IA.
+                  </p>
+                </div>
+              </div>
+              <Button asChild className="w-full gap-2">
+                <Link to="/planos">
+                  <Sparkles size={18} /> Ver planos
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Mensagens usadas este mês</span>
+                <span className="data-num font-semibold">
+                  {aiUsage.status.used} / {aiUsage.status.limit}
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all',
+                    aiUsage.status.used / aiUsage.status.limit >= 0.9
+                      ? 'bg-destructive'
+                      : 'bg-primary',
+                  )}
+                  style={{
+                    width: `${Math.min((aiUsage.status.used / aiUsage.status.limit) * 100, 100)}%`,
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Renova todo início de mês · plano {aiUsage.status.planType}
+              </p>
             </div>
           )}
         </CardContent>
