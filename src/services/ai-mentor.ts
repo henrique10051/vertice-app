@@ -20,7 +20,10 @@ export async function fetchAIMentorInsight(
     }
     if (data.limitReached) {
       return {
-        response: 'Você atingiu o limite de mensagens da IA neste mês.',
+        response:
+          data.usage?.limit === 0
+            ? 'O Mentor IA é exclusivo dos planos Pro e Premium.'
+            : 'Você atingiu o limite de mensagens da IA neste mês.',
         limitReached: true,
         usage: data.usage,
       }

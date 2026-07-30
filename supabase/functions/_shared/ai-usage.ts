@@ -1,8 +1,9 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-// Messages/month by plan. Generous during the closed beta (all users start on 'free').
+// Messages/month by plan. Free has no Mentor IA access at all — it's a paid-tier feature.
+// Beta users get real 'premium' rows in `subscriptions` (no payment yet), not the free tier.
 export const AI_USAGE_LIMITS: Record<string, number> = {
-  free: 40,
+  free: 0,
   pro: 150,
   premium: 500,
 }

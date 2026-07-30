@@ -45,6 +45,7 @@ export default function Mentor() {
   const [created, setCreated] = useState(false)
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [limitReached, setLimitReached] = useState(false)
+  const [usageInfo, setUsageInfo] = useState<{ used: number; limit: number } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function Mentor() {
   const processResponse = (resp: MentorResponse, currentMessages: ChatMessage[]) => {
     if (resp.limitReached) {
       setLimitReached(true)
+      setUsageInfo(resp.usage ? { used: resp.usage.used, limit: resp.usage.limit } : null)
       setCurrentQuestion(null)
       setCurrentOptions([])
       setIsLoading(false)
@@ -237,11 +239,12 @@ export default function Mentor() {
             </div>
           </div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-2">
-            Limite mensal do Mentor IA atingido
+            {usageInfo?.limit === 0 ? 'Mentor IA é exclusivo dos planos pagos' : 'Limite mensal do Mentor IA atingido'}
           </h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Você usou todas as mensagens de IA disponíveis no seu plano este mês. Assine um plano
-            com mais mensagens para continuar a entrevista.
+            {usageInfo?.limit === 0
+              ? 'O plano Free não inclui o Mentor IA. Assine o Pro ou Premium para começar a entrevista.'
+              : 'Você usou todas as mensagens de IA disponíveis no seu plano este mês. Assine um plano com mais mensagens para continuar a entrevista.'}
           </p>
           <Button asChild size="lg" className="rounded-full text-base font-semibold px-8">
             <Link to="/planos">Ver planos</Link>

@@ -20,6 +20,7 @@ export function AIMentorChat() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [limitReached, setLimitReached] = useState(false)
+  const [freeTierBlocked, setFreeTierBlocked] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const { habits } = useHabitsStore()
@@ -84,7 +85,10 @@ export function AIMentorChat() {
     try {
       const insight = await fetchAIMentorInsight(text, buildContext())
       setMessages((prev) => [...prev, { role: 'assistant', content: insight.response }])
-      if (insight.limitReached) setLimitReached(true)
+      if (insight.limitReached) {
+        setLimitReached(true)
+        setFreeTierBlocked(insight.usage?.limit === 0)
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -163,11 +167,13 @@ export function AIMentorChat() {
       {limitReached ? (
         <div className="p-3 border-t space-y-2">
           <p className="text-xs text-muted-foreground text-center">
-            Você usou todas as mensagens do Mentor IA disponíveis este mês.
+            {freeTierBlocked
+              ? 'O Mentor IA é exclusivo dos planos Pro e Premium.'
+              : 'Você usou todas as mensagens do Mentor IA disponíveis este mês.'}
           </p>
           <Button asChild className="w-full">
             <Link to="/planos" onClick={() => setOpen(false)}>
-              Ver planos e continuar com a IA
+              {freeTierBlocked ? 'Ver planos' : 'Ver planos e continuar com a IA'}
             </Link>
           </Button>
         </div>
