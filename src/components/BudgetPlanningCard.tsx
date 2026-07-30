@@ -38,6 +38,7 @@ export function BudgetPlanningCard() {
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [category, setCategory] = useState('')
   const [amount, setAmount] = useState('')
+  const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
 
   const month = nextMonthKey()
@@ -61,13 +62,20 @@ export function BudgetPlanningCard() {
     e.preventDefault()
     if (!cat || !amount || Number(amount) <= 0) return
     setSaving(true)
-    await upsertBudget({ month, type, category: cat, amount: Number(amount) })
+    await upsertBudget({
+      month,
+      type,
+      category: cat,
+      amount: Number(amount),
+      description: description.trim() || null,
+    })
     setSaving(false)
     toast({
       title: 'Previsão salva',
       description: `${cat}: ${formatBRL(Number(amount), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     })
     setAmount('')
+    setDescription('')
   }
 
   const handleDelete = async (b: Budget) => {
@@ -158,6 +166,16 @@ export function BudgetPlanningCard() {
               <Button type="submit" disabled={saving || !cat || !amount} className="gap-1.5">
                 <Plus size={16} /> Adicionar
               </Button>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Descrição (opcional)</Label>
+              <Input
+                type="text"
+                placeholder="Ex: aluguel, parcela do curso..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
           </form>
         </CardContent>
@@ -254,8 +272,13 @@ function BudgetList({
                 key={b.id}
                 className="group flex items-center justify-between rounded-md px-2 py-2 -mx-2 hover:bg-muted transition-colors"
               >
-                <span className="text-sm font-medium">{b.category}</span>
-                <div className="flex items-center gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium">{b.category}</span>
+                  {b.description && (
+                    <p className="text-xs text-muted-foreground truncate">{b.description}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
                   <span
                     className={cn(
                       'data-num text-sm',

@@ -669,6 +669,7 @@ export type Database = {
         Row: {
           abacatepay_bill_id: string | null
           abacatepay_status: string | null
+          access_source: string
           created_at: string | null
           current_period_end: string | null
           current_period_start: string | null
@@ -681,6 +682,7 @@ export type Database = {
         Insert: {
           abacatepay_bill_id?: string | null
           abacatepay_status?: string | null
+          access_source?: string
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
@@ -693,6 +695,7 @@ export type Database = {
         Update: {
           abacatepay_bill_id?: string | null
           abacatepay_status?: string | null
+          access_source?: string
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null

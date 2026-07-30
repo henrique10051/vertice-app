@@ -36,6 +36,7 @@ export type Budget = {
   type: 'income' | 'expense'
   category: string
   amount: number
+  description: string | null
   created_at: string
 }
 
