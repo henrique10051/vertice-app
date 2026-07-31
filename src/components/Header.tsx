@@ -14,6 +14,7 @@ import {
 import { QuickAddModal } from './QuickAddModal'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
+import { FeedbackModal } from './FeedbackModal'
 import { useAuth } from '@/hooks/use-auth'
 import { getProfile } from '@/services/profiles'
 
@@ -71,6 +72,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        <FeedbackModal />
         <ThemeToggle />
         <NotificationBell />
         <Button
