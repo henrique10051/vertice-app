@@ -14,9 +14,11 @@ import {
   CalendarDays,
   Dumbbell,
   BookOpen,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import useMainStore from '@/stores/main'
+import { Button } from '@/components/ui/button'
 
 const navItems = [
   { path: '/', label: 'Início', icon: LayoutDashboard },
@@ -60,7 +62,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2 mt-4">
+      <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
           const Icon = item.icon
@@ -90,6 +92,35 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      <div className="p-4 border-t border-sidebar-border/60 shrink-0 flex flex-col items-center gap-2">
+        {!sidebarCollapsed ? (
+          <div className="p-4 w-full border border-border/50 rounded-xl bg-muted/20 flex flex-col items-center text-center gap-2">
+            <span className="text-xs font-semibold text-foreground">Gostando do Vértice?</span>
+            <p className="text-[11px] text-muted-foreground leading-normal">
+              Sua opinião nos ajuda a melhorar constantemente.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-feedback'))}
+              className="w-full text-xs font-semibold mt-1 bg-background hover:bg-muted/80"
+            >
+              Deixar Feedback
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-feedback'))}
+            className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 h-10 w-10 flex items-center justify-center transition-colors"
+            title="Deixar Feedback"
+          >
+            <MessageSquare size={20} />
+          </Button>
+        )}
+      </div>
     </aside>
   )
 }

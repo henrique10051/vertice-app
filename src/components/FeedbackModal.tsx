@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Star, Send, Loader2, MessageSquare } from 'lucide-react'
 import {
   Dialog,
@@ -24,6 +24,44 @@ export function FeedbackModal() {
   const [hoverRating, setHoverRating] = useState<number | null>(null)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Escuta evento customizado para abrir o modal de feedback
+    const handleOpenFeedback = () => setOpen(true)
+    window.addEventListener('open-feedback', handleOpenFeedback)
+
+    // Agenda um toast de convite amigável após 30 segundos de uso
+    const feedbackPrompted = localStorage.getItem('feedback_prompted')
+    let timer: NodeJS.Timeout | null = null
+
+    if (!feedbackPrompted && user) {
+      timer = setTimeout(() => {
+        const toastRef = toast({
+          title: 'Sua opinião importa! 🌟',
+          description: 'Gostando do Vértice? Conta pra gente o que está achando!',
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setOpen(true)
+                toastRef.dismiss()
+              }}
+              className="font-semibold text-xs shrink-0"
+            >
+              Avaliar
+            </Button>
+          ),
+        })
+        localStorage.setItem('feedback_prompted', 'true')
+      }, 30000)
+    }
+
+    return () => {
+      window.removeEventListener('open-feedback', handleOpenFeedback)
+      if (timer) clearTimeout(timer)
+    }
+  }, [user, toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,12 +105,14 @@ export function FeedbackModal() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 h-10 w-10 flex items-center justify-center transition-colors"
-          title="Enviar feedback"
+          variant="outline"
+          className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 h-10 px-3.5 flex items-center gap-2 transition-colors border border-border/60 hover:border-border bg-background/40 shadow-sm"
+          title="Deixar Feedback"
         >
-          <MessageSquare size={20} />
+          <MessageSquare size={16} className="text-primary/80" />
+          <span className="hidden sm:inline text-xs font-semibold uppercase tracking-wider text-foreground">
+            Feedback
+          </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
