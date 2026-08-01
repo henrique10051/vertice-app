@@ -32,7 +32,7 @@ function nextMonthLabel() {
 }
 
 export function BudgetPlanningCard() {
-  const { budgets, financeCategories, upsertBudget, deleteBudget, installmentPurchases } =
+  const { budgets, financeCategories, addBudget, deleteBudget, installmentPurchases } =
     useFinancesStore()
   const { toast } = useToast()
   const [type, setType] = useState<'income' | 'expense'>('expense')
@@ -62,7 +62,7 @@ export function BudgetPlanningCard() {
     e.preventDefault()
     if (!cat || !amount || Number(amount) <= 0) return
     setSaving(true)
-    await upsertBudget({
+    const { error } = await addBudget({
       month,
       type,
       category: cat,
@@ -70,6 +70,14 @@ export function BudgetPlanningCard() {
       description: description.trim() || null,
     })
     setSaving(false)
+    if (error) {
+      toast({
+        title: 'Não foi possível salvar a previsão',
+        description: error.message,
+        variant: 'destructive',
+      })
+      return
+    }
     toast({
       title: 'Previsão salva',
       description: `${cat}: ${formatBRL(Number(amount), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,

@@ -82,7 +82,9 @@ interface DataContextType {
   addFinanceCategory: (name: string) => Promise<void>
   deleteFinanceCategory: (name: string) => Promise<void>
   budgets: Budget[]
-  upsertBudget: (b: Omit<Budget, 'id' | 'user_id' | 'created_at'>) => Promise<void>
+  addBudget: (
+    b: Omit<Budget, 'id' | 'user_id' | 'created_at'>,
+  ) => Promise<{ error: Error | null }>
   deleteBudget: (id: string) => Promise<void>
   installmentPurchases: InstallmentPurchase[]
   addInstallmentPurchase: (
@@ -396,20 +398,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [user],
   )
 
-  const upsertBudget = useCallback(
+  const addBudget = useCallback(
     async (b: Omit<Budget, 'id' | 'user_id' | 'created_at'>) => {
-      if (!user) return
-      const { data } = await supabase
+      if (!user) return { error: new Error('not authenticated') }
+      const { data, error } = await supabase
         .from('budgets')
-        .upsert({ ...b, user_id: user.id }, { onConflict: 'user_id,month,type,category' })
+        .insert({ ...b, user_id: user.id })
         .select()
         .single()
-      if (data) {
-        setBudgets((prev) => {
-          const existing = prev.filter((x) => x.id !== data.id)
-          return [...existing, data]
-        })
+      if (error) {
+        console.error('addBudget failed', error)
+        return { error }
       }
+      setBudgets((prev) => [...prev, data])
+      return { error: null }
     },
     [user],
   )
@@ -455,7 +457,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addFinanceCategory,
         deleteFinanceCategory,
         budgets,
-        upsertBudget,
+        addBudget,
         deleteBudget,
         installmentPurchases,
         addInstallmentPurchase,
